@@ -33,6 +33,12 @@ def option_reading():
     return port
 
 
+def serve_customer(client_socket, client_addres):
+    client_socket.send(('Welcome to helper chat').encode())
+    print('Client', client_addres, 'disconnected')
+    client_socket.close()
+
+
 def main():
 
     check_existence_db()
@@ -48,10 +54,10 @@ def main():
     while True:
         server_socket.listen(16)
 
-        client_socket, host = server_socket.accept()
-        print(f'\nGot a connection from: {host}')
+        client_socket, client_addres = server_socket.accept()
+        print(f'\nGot a connection from: {client_addres}')
 
-        multiprocess = multiprocessing.Process(args=(client_socket, host))
+        multiprocess = multiprocessing.Process(target=serve_customer, args=(client_socket, client_addres))
         multiprocess.start()
 
 
