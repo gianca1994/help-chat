@@ -34,7 +34,14 @@ def option_reading():
 
 
 def serve_customer(client_socket, client_addres):
-    client_socket.send(('Welcome to helper chat').encode())
+    
+    msg_client = client_socket.recv(2048).decode()
+    print(msg_client)
+    
+    response_server = msg_client + " OK, MESSAGE RECEIVED."
+    
+    client_socket.send(('Welcome to helper chat ' + response_server).encode())
+    
     print('Client', client_addres, 'disconnected')
     client_socket.close()
 

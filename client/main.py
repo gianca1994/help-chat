@@ -48,6 +48,10 @@ def main():
     print(
         f'Connected to the Help Chat server at address: {host} and at port: {port}')
 
+    msg = zone + ' ' + rol
+    
+    client_socket.send(msg.encode())
+    
     response_server = client_socket.recv(4096).decode()
     print(response_server)
     
