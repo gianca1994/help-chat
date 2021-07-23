@@ -1,6 +1,7 @@
 # !/usr/bin/python3
 
 import getopt
+from utilities.check_db_existence import check_existence_db
 import sys
 import socket
 import multiprocessing
@@ -34,6 +35,8 @@ def option_reading():
 
 def main():
 
+    check_existence_db()
+    
     port = option_reading()
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
