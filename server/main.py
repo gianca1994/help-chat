@@ -1,7 +1,8 @@
 # !/usr/bin/python3
 
-import getopt, sys
+import getopt, sys, socket
 
+host_address = socket.gethostbyname(socket.getfqdn())
 
 def option_reading():
     (opt, arg) = getopt.getopt(sys.argv[1:], 'p:', ['port='])
@@ -25,3 +26,30 @@ def option_reading():
 
     assert port is not None
     return port
+
+
+def main():
+    
+    port = option_reading()    
+    
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(('', port))
+    
+    print(f"Server turned on with address: {host_address} and the port: {port}. STATUS: Ready to interact")
+    
+    while True:
+        server_socket.listen(16)
+    
+    
+if __name__ == '__main__':
+    try:
+        main()
+    except getopt.GetoptError as error:
+        print(error)
+    except ConnectionRefusedError:
+        print('Error: Connection refused')
+    except socket.error:
+        print('Failed to create a socket')
+    except Exception as error:
+        print(error)
+    
