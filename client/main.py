@@ -2,6 +2,7 @@
 
 import getopt
 import sys
+import socket
 
 
 def option_reading():
@@ -33,7 +34,29 @@ You entered: {len (opt)} options.
 
         else:
             print('The option entered is not valid.')
-            
+
     assert (host, port, zone, rol) is not None
     return host, port, zone, rol
 
+
+def main():
+    host, port, zone, rol = option_reading()
+
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.connect((host, port))
+
+    print(
+        f'Connected to the Help Chat server at address: {host} and at port: {port}')
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except getopt.GetoptError as error:
+        print(error)
+    except ConnectionRefusedError:
+        print('Error: Connection refused')
+    except socket.error:
+        print('Failed to create a socket')
+    except Exception as error:
+        print(error)
