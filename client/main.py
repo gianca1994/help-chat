@@ -1,8 +1,10 @@
 # !/usr/bin/python3
 
 import getopt
-import sys
 import socket
+import sys
+
+# py main.py -h 192.168.1.6 -p 5000 -z argentina -r gianca
 
 
 def option_reading():
@@ -15,21 +17,21 @@ def option_reading():
 - [-p] or [--port] 
 - [-z] or [--zone] 
 - [-r] or [--rol] 
-You entered: {len (opt)} options.
+You entered: {len(opt)} options.
 """)
         sys.exit(0)
 
     for (op, arg) in opt:
-        if (op in ['-h', '--host']):
+        if op in ['-h', '--host']:
             host = str(arg)
 
-        elif (op in ['-p', '--port']):
+        elif op in ['-p', '--port']:
             port = int(arg)
 
-        elif (op in ['-z', '--zone']):
+        elif op in ['-z', '--zone']:
             zone = str(arg)
 
-        elif (op in ['-r', '--rol']):
+        elif op in ['-r', '--rol']:
             rol = str(arg)
 
         else:
@@ -40,7 +42,7 @@ You entered: {len (opt)} options.
 
 
 def main():
-    host, port, zone, rol = option_reading()
+    host, port, zone, rol = '192.168.1.6', 5000, 'administrativa', 'gianca'  # option_reading()
 
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((host, port))
@@ -48,14 +50,22 @@ def main():
     print(
         f'Connected to the Help Chat server at address: {host} and at port: {port}')
 
-    msg = zone + ' ' + rol
-    
+    incoming_data = client_socket.recv(4096).decode()
+    print(incoming_data)
+
+    msg = 'exit'
+
     client_socket.send(msg.encode())
-    
-    response_server = client_socket.recv(4096).decode()
-    print(response_server)
-    
-    
+
+    incoming_data = client_socket.recv(4096).decode()
+
+    if incoming_data == 'exit_client':
+        print("Connection closed...")
+        exit()
+    else:
+        print(incoming_data)
+
+
 if __name__ == '__main__':
     try:
         main()

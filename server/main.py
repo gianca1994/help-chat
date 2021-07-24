@@ -1,13 +1,17 @@
 # !/usr/bin/python3
 
 import getopt
-from utilities.check_db_existence import check_existence_db
-import sys
-import socket
 import multiprocessing
+import socket
+import sys
 
-host_address = socket.gethostbyname(socket.getfqdn())
+from tcp.protocol import protocol_tcp
+from utilities.check_db_existence import check_existence_db
 
+host_address = '192.168.1.6'  # socket.gethostbyname(socket.getfqdn())
+
+
+# py main.py -p 5000
 
 def option_reading():
     (opt, arg) = getopt.getopt(sys.argv[1:], 'p:', ['port='])
@@ -18,7 +22,7 @@ def option_reading():
         sys.exit(0)
 
     for (op, arg) in opt:
-        if (op in ['-p', '--port']):
+        if op in ['-p', '--port']:
 
             if int(arg) > 1000:
                 port = int(arg)
@@ -33,24 +37,10 @@ def option_reading():
     return port
 
 
-def serve_customer(client_socket, client_addres):
-    
-    msg_client = client_socket.recv(2048).decode()
-    print(msg_client)
-    
-    response_server = msg_client + " OK, MESSAGE RECEIVED."
-    
-    client_socket.send(('Welcome to helper chat ' + response_server).encode())
-    
-    print('Client', client_addres, 'disconnected')
-    client_socket.close()
-
-
 def main():
-
     check_existence_db()
-    
-    port = option_reading()
+
+    port = 5000  # option_reading()
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(('', port))
@@ -61,10 +51,10 @@ def main():
     while True:
         server_socket.listen(16)
 
-        client_socket, client_addres = server_socket.accept()
-        print(f'\nGot a connection from: {client_addres}')
+        client_socket, client_address = server_socket.accept()
+        print(f'\nGot a connection from: {client_address}')
 
-        multiprocess = multiprocessing.Process(target=serve_customer, args=(client_socket, client_addres))
+        multiprocess = multiprocessing.Process(target=protocol_tcp, args=(client_socket, client_address))
         multiprocess.start()
 
 
