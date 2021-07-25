@@ -1,5 +1,3 @@
-
-
 class Zone:
     def __init__(self, name_zone):
         self.name_zone = name_zone

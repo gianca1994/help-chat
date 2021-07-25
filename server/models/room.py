@@ -1,17 +1,15 @@
-
-
 class Room:
-    def __init__(self, id, id_operator, id_client, id_zone):
-        self.id = id
+    def __init__(self, id_room, id_operator, id_client, id_zone):
+        self.id_room = id_room
         self.id_operator = id_operator
         self.id_client = id_client
         self.id_zone = id_zone
 
-    def get_id(self):
-        return self.id
+    def get_id_room(self):
+        return self.id_room
 
-    def set_id(self, id):
-        self.id = id
+    def set_id_room(self, id_room):
+        self.id_room = id_room
 
     def get_id_operator(self):
         return self.id_operator
