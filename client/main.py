@@ -5,12 +5,7 @@ import socket
 import sys
 
 # py main.py -h 192.168.1.6 -p 5000 -z argentina -r gianca
-
-name_packages = (
-    'exit',  # 0
-    'zone_rol',  # 1
-    'login_or_register',  # 2
-)
+from tcp.protocol import protocol_tcp
 
 
 def option_reading():
@@ -56,34 +51,8 @@ def main():
     print(
         f'Connected to the Help Chat server at address: {host} and at port: {port}')
 
-    incoming_data = client_socket.recv(4096).decode()
-    print(incoming_data)
+    protocol_tcp(client_socket, zone, rol)
 
-    # Setear rol y zona
-    output_data = name_packages[1] + ',' + zone + ',' + rol
-    client_socket.send(output_data.encode())
-
-    incoming_data = client_socket.recv(4096).decode()
-    print(incoming_data)
-
-    # Elegir registro o login
-    signUp_or_signIn = int(input('Then enter 1- SIGN UP or 2- SIGN IN: '))
-    user_name = str(input("Enter username: "))
-    password = str(input("Enter password: "))
-    output_data = name_packages[2] + ',' + str(signUp_or_signIn) + ',' + user_name + ',' + password
-    client_socket.send(output_data.encode())
-
-    incoming_data = client_socket.recv(4096).decode()
-    print(incoming_data)
-
-
-'''    incoming_data = client_socket.recv(4096).decode()
-
-    if incoming_data == 'exit_client':
-        print("Connection closed...")
-        exit()
-    else:
-        print(incoming_data)'''
 
 if __name__ == '__main__':
     try:

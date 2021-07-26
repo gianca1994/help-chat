@@ -1,29 +1,37 @@
-name_packages = (
-    'exit',  # 0
-    'zone_rol',  # 1
-    'login_or_register',  # 2
-)
+import enum
+
+split = '!¡"?#=$)%(&/'
+
+
+class Package(enum.Enum):
+    initial_msg = '1'
+    exit = '2'
+    zone_rol = '3'
+    login_or_register = '4'
 
 
 def protocol_tcp(client_socket, client_address):
     client_socket.send(WriteOutgoingData.initial_message().encode())
 
-    incoming_data = (client_socket.recv(4096).decode()).split(',')
-    data = incoming_data.pop(0)
+    while True:
+        incoming_data = (client_socket.recv(4096).decode()).split(split)
+        data = incoming_data.pop(0)
 
-    ######################## HANDLERS ########################
-    if data == name_packages[0]:
-        print('Client', client_address, 'disconnected')
-        client_socket.send('exit_client'.encode())
-        client_socket.close()
+        ######################## HANDLERS ########################
+        if data == Package.exit.value:
+            del data
+            print('Client', client_address, 'disconnected')
+            client_socket.send('exit_client'.encode())
+            client_socket.close()
 
-    elif data == name_packages[1]:
-        HandleIncomingData.zone_and_rol(incoming_data)
-        client_socket.send(WriteOutgoingData.zone_and_rol().encode())
+        elif data == Package.zone_rol.value:
+            del data
+            HandleIncomingData.zone_and_rol(incoming_data)
+            client_socket.send(WriteOutgoingData.zone_and_rol().encode())
 
-    elif data == name_packages[2]:
-        print(incoming_data[0], incoming_data[1], incoming_data[2])
-        HandleIncomingData.register_or_login(incoming_data)
+        elif data == Package.login_or_register.value:
+            del data
+            HandleIncomingData.register_or_login(incoming_data)
 
 
 class HandleIncomingData:
@@ -59,11 +67,13 @@ class WriteOutgoingData:
 
     @staticmethod
     def initial_message():
-        return 'Welcome to Help Chat (v0.1)!'
+        output_data = Package.initial_msg.value + split + 'Welcome to Help Chat (v0.1)!'
+        return output_data
 
     @staticmethod
     def zone_and_rol():
-        return 'zone and rol, configured...'
+        output_data = Package.zone_rol.value + split + 'zone and rol, configured...'
+        return output_data
 
 
 class Features:
