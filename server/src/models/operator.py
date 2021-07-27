@@ -26,8 +26,8 @@ class Operator:
     def set_zone_id(self, zone_id):
         self.zone_id = zone_id
 
-    def set_operator(self, name_operator):
-        self.operators.append(name_operator)
-
     def get_operator(self):
         return self.operators.pop(choice(self.operators))
+
+    def set_operator(self, name_operator):
+        self.operators.append(name_operator)

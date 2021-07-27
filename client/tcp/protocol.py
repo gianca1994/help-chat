@@ -15,15 +15,12 @@ def protocol_tcp(client_socket, zone, rol):
         incoming_data = (client_socket.recv(4096).decode()).split(split)
         data = incoming_data.pop(0)
 
-        HandleIncomingData.initial_message(incoming_data[0]) if data == Package.initial_msg.value else None
-
-        client_socket.send(WriteOutgoingData.zone_and_rol(zone, rol).encode())
-
-        HandleIncomingData.zone_and_rol(incoming_data[0]) if data == Package.zone_rol.value else None
-
-        client_socket.send(WriteOutgoingData.register_or_login().encode())
-
-        del data
+        if data == Package.initial_msg.value:
+            HandleIncomingData.initial_message(incoming_data[0])
+            client_socket.send(WriteOutgoingData.zone_and_rol(zone, rol).encode())
+        elif data == Package.zone_rol.value:
+            HandleIncomingData.zone_and_rol(incoming_data[0])
+            client_socket.send(WriteOutgoingData.register_or_login().encode())
 
 
 class HandleIncomingData:

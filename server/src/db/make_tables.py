@@ -2,8 +2,7 @@ import sqlite3
 from sqlite3.dbapi2 import connect
 
 tables = [
-    "CREATE TABLE clients(id integer PRIMARY KEY, user_name text, password text, email text)",
-    "CREATE TABLE operators(id integer PRIMARY KEY, zone_id int)",
+    "CREATE TABLE users(id integer PRIMARY KEY, user_name text, password text, operator boolean)",
     "CREATE TABLE rooms(id integer PRIMARY KEY, id_operator int, id_client int, id_zone int)",
     "CREATE TABLE zones(id integer PRIMARY KEY, name_zone text)"
 ]

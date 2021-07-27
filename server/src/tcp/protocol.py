@@ -1,6 +1,14 @@
 import enum
 
+from src.models.zone import ChatZone
+
+from src.db.crud_db import register_user, login_user
+
 split = '!¡"?#=$)%(&/'
+
+technical_zone = ChatZone('technique')
+administrative_zone = ChatZone('administrative')
+sales_zone = ChatZone('sales')
 
 
 class Package(enum.Enum):
@@ -17,20 +25,16 @@ def protocol_tcp(client_socket, client_address):
         incoming_data = (client_socket.recv(4096).decode()).split(split)
         data = incoming_data.pop(0)
 
-        ######################## HANDLERS ########################
         if data == Package.exit.value:
-            del data
             print('Client', client_address, 'disconnected')
             client_socket.send('exit_client'.encode())
             client_socket.close()
 
         elif data == Package.zone_rol.value:
-            del data
             HandleIncomingData.zone_and_rol(incoming_data)
             client_socket.send(WriteOutgoingData.zone_and_rol().encode())
 
         elif data == Package.login_or_register.value:
-            del data
             HandleIncomingData.register_or_login(incoming_data)
 
 
@@ -39,28 +43,33 @@ class HandleIncomingData:
     @staticmethod
     def zone_and_rol(incoming_data):
 
-        if incoming_data[0] == 'tecnica':
-            if incoming_data[1] == 'operator':
-                print('OPERATOR tecnica')
-            elif incoming_data[1] == 'client':
-                print('CLIENT tecnica')
-        elif incoming_data[0] == 'administrativa':
-            if incoming_data[1] == 'operator':
-                print('OPERATOR administrativa')
-            elif incoming_data[1] == 'client':
-                print('CLIENT administrativa')
-        elif incoming_data[0] == 'ventas':
-            if incoming_data[1] == 'operator':
-                print('OPERATOR ventas')
-            elif incoming_data[1] == 'client':
-                print('CLIENT ventas')
+        zone = incoming_data[0]
+        rol = incoming_data[1]
+
+        if zone == technical_zone.get_name_zone():
+            if rol == 'operator':
+                technical_zone.set_operator(rol)
+            elif rol == 'client':
+                technical_zone.set_client(rol)
+        elif zone == administrative_zone.get_name_zone():
+            if rol == 'operator':
+                administrative_zone.set_operator(rol)
+            elif rol == 'client':
+                administrative_zone.set_client(rol)
+        elif zone == sales_zone.get_name_zone():
+            if rol == 'operator':
+                sales_zone.set_operator(rol)
+            elif rol == 'client':
+                sales_zone.set_client(rol)
+
+        print(administrative_zone.get_all_clients(), administrative_zone.get_all_operators())
 
     @staticmethod
     def register_or_login(incoming_data):
         if incoming_data[0] == '1':
-            Features.register(incoming_data[1], incoming_data[2])
+            register_user(incoming_data[1], incoming_data[2])
         elif incoming_data[0] == '2':
-            Features.login(incoming_data[1], incoming_data[2])
+            login_user(incoming_data[1], incoming_data[2])
 
 
 class WriteOutgoingData:
@@ -72,15 +81,6 @@ class WriteOutgoingData:
 
     @staticmethod
     def zone_and_rol():
-        output_data = Package.zone_rol.value + split + 'zone and rol, configured...'
+        output_data = Package.zone_rol.value + split + 'Register or log in to finish configuring the zone and role.'
         return output_data
 
-
-class Features:
-    @staticmethod
-    def login(user_name, password):
-        print("LOGIN: " + user_name, password)
-
-    @staticmethod
-    def register(user_name, password):
-        print("REGISTER: " + user_name, password)
