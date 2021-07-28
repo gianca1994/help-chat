@@ -5,7 +5,7 @@ import threading
 import socket
 import sys
 
-from src.tcp.protocol import protocol_tcp
+from protocol import protocol_tcp
 from src.utilities.check_db_existence import check_existence_db
 
 host_address = '192.168.1.6'  # socket.gethostbyname(socket.getfqdn())
