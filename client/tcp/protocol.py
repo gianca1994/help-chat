@@ -1,4 +1,6 @@
 import enum
+import os
+from time import sleep
 
 split = '!¡"?#=$)%(&/'
 
@@ -8,6 +10,8 @@ class Package(enum.Enum):
     exit = '2'
     zone_rol = '3'
     login_or_register = '4'
+    validation_register_login = '5'
+    menu_initial = '7'
 
 
 def protocol_tcp(client_socket, zone, rol):
@@ -23,6 +27,13 @@ def protocol_tcp(client_socket, zone, rol):
             HandleIncomingData.zone_and_rol(incoming_data[0])
             client_socket.send(WriteOutgoingData.register_or_login().encode())
 
+        elif data == Package.validation_register_login.value:
+            HandleIncomingData.valid_register_login(incoming_data[0])
+            Functions.timer(3)
+            
+        elif data == Package.menu_initial.value:
+            HandleIncomingData.show_menu_loggin(incoming_data[0], incoming_data[1])
+
 
 class HandleIncomingData:
 
@@ -37,6 +48,15 @@ class HandleIncomingData:
     @staticmethod
     def register_or_login(incoming_data):
         print(incoming_data)
+
+    @staticmethod
+    def valid_register_login(incoming_data):
+        print(incoming_data)
+    
+    @staticmethod
+    def show_menu_loggin(incoming_data_one, incoming_data_two):
+        print(incoming_data_one)
+        print(incoming_data_two)
 
 
 class WriteOutgoingData:
@@ -54,3 +74,15 @@ class WriteOutgoingData:
         output_data = Package.login_or_register.value + split + str(
             signUp_or_signIn) + split + user_name + split + password
         return output_data
+    
+    
+
+
+class Functions:
+
+    @staticmethod
+    def timer(seconds):
+        for i in range(seconds, 0, -1):
+            print(f'Starting in {i} seconds...')
+            sleep(1)
+        os.system('clear')

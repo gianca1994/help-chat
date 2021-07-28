@@ -43,7 +43,7 @@ You entered: {len(opt)} options.
 
 
 def main():
-    host, port, zone, rol = '192.168.1.6', 5000, 'administrative', 'operator'  # option_reading()
+    host, port, zone, rol = '192.168.1.6', 5002, 'administrative', 'operator'  # option_reading()
 
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((host, port))
