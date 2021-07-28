@@ -1,7 +1,7 @@
 # !/usr/bin/python3
 
 import getopt
-import multiprocessing
+import threading
 import socket
 import sys
 
@@ -54,8 +54,8 @@ def main():
         client_socket, client_address = server_socket.accept()
         print(f'\nGot a connection from: {client_address}')
 
-        multiprocess = multiprocessing.Process(target=protocol_tcp, args=(client_socket, client_address))
-        multiprocess.start()
+        multithreading = threading.Thread(target=protocol_tcp, args=(client_socket, client_address))
+        multithreading.start()
 
 
 if __name__ == '__main__':
