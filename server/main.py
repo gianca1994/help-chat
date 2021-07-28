@@ -5,7 +5,6 @@ import multiprocessing
 import socket
 import sys
 
-from src.db.crud_db import login_user
 from src.tcp.protocol import protocol_tcp
 from src.utilities.check_db_existence import check_existence_db
 

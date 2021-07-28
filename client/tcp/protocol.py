@@ -18,6 +18,7 @@ def protocol_tcp(client_socket, zone, rol):
         if data == Package.initial_msg.value:
             HandleIncomingData.initial_message(incoming_data[0])
             client_socket.send(WriteOutgoingData.zone_and_rol(zone, rol).encode())
+            
         elif data == Package.zone_rol.value:
             HandleIncomingData.zone_and_rol(incoming_data[0])
             client_socket.send(WriteOutgoingData.register_or_login().encode())

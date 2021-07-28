@@ -1,7 +1,6 @@
 import enum
 
 from src.models.zone import ChatZone
-
 from src.db.crud_db import register_user, login_user
 
 split = '!¡"?#=$)%(&/'
@@ -18,12 +17,14 @@ class Package(enum.Enum):
     login_or_register = '4'
 
 
+
 def protocol_tcp(client_socket, client_address):
     client_socket.send(WriteOutgoingData.initial_message().encode())
 
     while True:
         incoming_data = (client_socket.recv(4096).decode()).split(split)
         data = incoming_data.pop(0)
+    
 
         if data == Package.exit.value:
             print('Client', client_address, 'disconnected')
