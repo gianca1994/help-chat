@@ -11,7 +11,7 @@ class Package(enum.Enum):
     zone_rol = '3'
     login_or_register = '4'
     validation_register_login = '5'
-    menu_initial = '7'
+    menu_initial = '6'
 
 
 def protocol_tcp(client_socket, zone, rol):

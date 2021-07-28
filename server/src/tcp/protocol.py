@@ -17,8 +17,7 @@ class Package(enum.Enum):
     zone_rol = '3'
     login_or_register = '4'
     validation_register_login = '5'
-
-    menu_initial = '7'
+    menu_initial = '6'
 
 
 def protocol_tcp(client_socket, client_address):
@@ -40,16 +39,14 @@ def protocol_tcp(client_socket, client_address):
         elif data == Package.login_or_register.value:
             register_login_valid = HandleIncomingData.register_or_login(
                 incoming_data)
+
             client_socket.send(WriteOutgoingData.login_register_validation(
                 register_login_valid).encode())
 
-            sleep(1)
+            sleep(0.05)
 
-            client_socket.send(WriteOutgoingData.user_logged_menu(
-                incoming_data[0],
-                register_login_valid,
-                incoming_data[1]
-            ).encode())
+            if incoming_data[0] and register_login_valid:
+               client_socket.send(WriteOutgoingData.user_logged_menu(incoming_data[1]).encode())
 
 
 class HandleIncomingData:
@@ -109,6 +106,5 @@ class WriteOutgoingData:
             return Package.validation_register_login.value + split + 'Failed to load a user or existing user if you are registering.'
 
     @staticmethod
-    def user_logged_menu(check_login, validation_data, username):
-        if check_login == '2' and validation_data:
-            return Package.menu_initial.value + split + f'Welcome {username} to the help chat system ...' + split + 'You are currently in a waiting queue, you will enter a room as soon as you are assigned a client or operator ...'
+    def user_logged_menu(username):
+        return Package.menu_initial.value + split + f'Welcome {username} to the help chat system...' + split + 'You are currently in a waiting queue, you will enter a room as soon as you are assigned a client or operator...'

@@ -40,7 +40,7 @@ def option_reading():
 def main():
     check_existence_db()
 
-    port = 5002  # option_reading()
+    port = option_reading()
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(('', port))
