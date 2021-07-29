@@ -2,13 +2,15 @@ import enum
 from time import sleep
 
 from src.models.user import UserData
-from src.models.zone import ChatZone
+from src.models.zone import ZoneTechnique, ZoneAdministrative, ZoneSales
 from src.db.crud_db import register_user, login_user
 
 split = '!¡"?#=$)%(&/'
 
-zone_selected = ChatZone()
 
+zone_technique = ZoneTechnique()
+zone_administrative = ZoneAdministrative()
+zone_sales = ZoneSales()
 
 class Package(enum.Enum):
     exit = '0'
@@ -45,7 +47,14 @@ def protocol_tcp(client_socket, client_address):
                 )
                 WriteOutgoingData.zone_rol(user.get_user_name(), user.get_zone(), user.get_rol())
                 # client_socket.send(WriteOutgoingData.user_logged_menu(incoming_data[1]).encode())
-
+                print(
+                    zone_technique.get_all_clients_technique(),
+                    zone_administrative.get_all_clients_administrative(),
+                    zone_sales.get_all_clients_sales(),
+                    zone_technique.get_all_operators_technique(),
+                    zone_administrative.get_all_operators_administrative(),
+                    zone_sales.get_all_operators_sales()
+                )
 
 class HandleIncomingData:
 
@@ -78,33 +87,25 @@ class WriteOutgoingData:
         list_roles = ['client', 'operator']
 
         if zone in list_zones and rol in list_roles:
-            zone_selected.set_name_zone(zone)
 
             if rol == list_roles[0]:
+
                 if zone == list_zones[0]:
-                    zone_selected.set_client_technique(username=username)
+                    zone_technique.set_client_technique(username)
                 elif zone == list_zones[1]:
-                    zone_selected.set_client_administrative(username=username)
+                    zone_administrative.set_client_administrative(username)
                 elif zone == list_zones[2]:
-                    zone_selected.set_client_sales(username=username)
+                    zone_sales.set_client_sales(username)
 
             elif rol == list_roles[1]:
                 if zone == list_zones[0]:
-                    zone_selected.set_operator_technique(username=username)
+                    zone_technique.set_operator_technique(username)
                 elif zone == list_zones[1]:
-                    zone_selected.set_operator_administrative(username=username)
+                    zone_administrative.set_operator_administrative(username)
                 elif zone == list_zones[2]:
-                    zone_selected.set_operator_sales(username=username)
+                    zone_sales.set_operator_sales(username)
 
-        print(
-            zone_selected.get_name_zone(),
-            zone_selected.get_client_technique(),
-            zone_selected.get_client_administrative(),
-            zone_selected.get_client_sales(),
-            zone_selected.get_operator_technique(),
-            zone_selected.get_operator_administrative(),
-            zone_selected.get_operator_sales()
-        )
+       
 
     @staticmethod
     def user_logged_menu(username):
