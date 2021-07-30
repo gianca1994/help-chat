@@ -18,18 +18,25 @@ def protocol_tcp(client_socket, zone, rol):
         incoming_data = (client_socket.recv(4096).decode()).split(split)
         data = incoming_data.pop(0)
 
-        if data == Package.initial_msg.value:
+        if data == Package.exit.value:
+            client_socket.send(Package.exit.value.encode())
+            Functions.timer_exit(5)
+
+        elif data == Package.initial_msg.value:
             HandleIncomingData.initial_msg(incoming_data[0])
             client_socket.send(WriteOutgoingData.register_or_login(zone, rol).encode())
 
-            # client_socket.send(WriteOutgoingData.zone_and_rol(zone, rol).encode())
-
         elif data == Package.validation_register_login.value:
             HandleIncomingData.validation_register_login(incoming_data[0])
-            Functions.timer(3)
-            
-        elif data == Package.menu_initial.value:
-            HandleIncomingData.user_logged_menu(incoming_data[0], incoming_data[1])
+            Functions.timer_start(3)
+
+        elif data == Package.user_logged_menu.value:
+            HandleIncomingData.user_logged_menu(
+                incoming_data[0],
+                incoming_data[1],
+                incoming_data[2],
+                incoming_data[3]
+            )
 
 
 class HandleIncomingData:
@@ -45,11 +52,15 @@ class HandleIncomingData:
     @staticmethod
     def validation_register_login(incoming_data):
         print(incoming_data)
-    
+
     @staticmethod
-    def user_logged_menu(incoming_data_one, incoming_data_two):
+    def user_logged_menu(incoming_data_one, incoming_data_two, zone_selected, incoming_data_four):
         print(incoming_data_one)
         print(incoming_data_two)
+        print()
+        print(zone_selected)
+        print()
+        print(incoming_data_four)
 
 
 class WriteOutgoingData:
@@ -67,8 +78,16 @@ class WriteOutgoingData:
 class Functions:
 
     @staticmethod
-    def timer(seconds):
+    def timer_start(seconds):
         for i in range(seconds, 0, -1):
             print(f'Starting in {i} seconds...')
             sleep(1)
         os.system('clear')
+
+    @staticmethod
+    def timer_exit(seconds):
+        print(f'The client will close in {seconds} seconds ...')
+        for i in range(seconds, 0, -1):
+            print(f'closing client in {i} seconds...')
+            sleep(1)
+        exit(0)

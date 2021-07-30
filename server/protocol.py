@@ -7,10 +7,10 @@ from src.db.crud_db import register_user, login_user
 
 split = '!¡"?#=$)%(&/'
 
-
 zone_technique = ZoneTechnique()
 zone_administrative = ZoneAdministrative()
 zone_sales = ZoneSales()
+
 
 class Package(enum.Enum):
     exit = '0'
@@ -35,6 +35,9 @@ def protocol_tcp(client_socket, client_address):
         elif data == Package.register_or_login.value:
             register_login_valid = HandleIncomingData.register_or_login(incoming_data)
 
+            if not register_login_valid:
+                client_socket.send(Package.exit.value.encode())
+
             client_socket.send(WriteOutgoingData.validation_register_login(register_login_valid).encode())
             sleep(0.05)
 
@@ -45,28 +48,37 @@ def protocol_tcp(client_socket, client_address):
                     zone=incoming_data[3],
                     rol=incoming_data[4]
                 )
-                WriteOutgoingData.zone_rol(user.get_user_name(), user.get_zone(), user.get_rol())
-                # client_socket.send(WriteOutgoingData.user_logged_menu(incoming_data[1]).encode())
-                print(
-                    zone_technique.get_all_clients_technique(),
-                    zone_administrative.get_all_clients_administrative(),
-                    zone_sales.get_all_clients_sales(),
-                    zone_technique.get_all_operators_technique(),
-                    zone_administrative.get_all_operators_administrative(),
-                    zone_sales.get_all_operators_sales()
+
+                zone_selected = WriteOutgoingData.zone_rol(
+                    user.get_user_name(),
+                    user.get_zone(),
+                    user.get_rol()
                 )
+
+                client_socket.send(WriteOutgoingData.user_logged_menu(
+                    incoming_data[1],
+                    incoming_data[3],
+                    zone_selected
+                ).encode())
+
 
 class HandleIncomingData:
 
     @staticmethod
     def register_or_login(incoming_data):
         if incoming_data[0] == '1':
-            return register_user(incoming_data[1], incoming_data[2])
+            return register_user(incoming_data[1], incoming_data[2], incoming_data[4])
         elif incoming_data[0] == '2':
-            return login_user(incoming_data[1], incoming_data[2])
+            return login_user(incoming_data[1], incoming_data[2], incoming_data[4])
 
 
 class WriteOutgoingData:
+
+    @staticmethod
+    def exit_user():
+        output_data = Package.exit.value + \
+                      split + 'See you later!'
+        return output_data
 
     @staticmethod
     def initial_msg():
@@ -89,24 +101,35 @@ class WriteOutgoingData:
         if zone in list_zones and rol in list_roles:
 
             if rol == list_roles[0]:
-
                 if zone == list_zones[0]:
                     zone_technique.set_client_technique(username)
+                    return zone_technique.get_all_clients_technique()
+
                 elif zone == list_zones[1]:
                     zone_administrative.set_client_administrative(username)
+                    return zone_administrative.get_all_clients_administrative()
+
                 elif zone == list_zones[2]:
                     zone_sales.set_client_sales(username)
+                    return zone_sales.get_all_clients_sales()
 
             elif rol == list_roles[1]:
                 if zone == list_zones[0]:
                     zone_technique.set_operator_technique(username)
+                    return zone_technique.get_all_operators_technique()
+
                 elif zone == list_zones[1]:
                     zone_administrative.set_operator_administrative(username)
+                    return zone_administrative.get_all_operators_administrative()
+
                 elif zone == list_zones[2]:
                     zone_sales.set_operator_sales(username)
-
-       
+                    return zone_sales.get_all_operators_sales()
 
     @staticmethod
-    def user_logged_menu(username):
-        return Package.menu_initial.value + split + f'Welcome {username} to the help chat system...' + split + 'You are currently in a waiting queue, you will enter a room as soon as you are assigned a client or operator...'
+    def user_logged_menu(username, zone_selected, users_in_zone):
+        return Package.user_logged_menu.value + split + \
+               f'Welcome {username} to the help chat system...' + split + \
+               'You are currently in a waiting queue, you will enter a room as soon as you are assigned a client or operator...' + split + \
+               f'customers in the area: {zone_selected}, in the queue: {users_in_zone}' + split + \
+               'As soon as an operator is available, he will go to a chat room'

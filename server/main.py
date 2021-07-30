@@ -4,9 +4,10 @@ import getopt
 import threading
 import socket
 import sys
+import logging
 
 from protocol import protocol_tcp
-from src.utilities.check_db_existence import check_existence_db
+from utilities.check_db_existence import check_existence_db
 
 host_address = '192.168.1.6'  # socket.gethostbyname(socket.getfqdn())
 
@@ -39,6 +40,7 @@ def option_reading():
 
 def main():
     check_existence_db()
+    logging.basicConfig(filename='server.log', encoding='utf-8', format='%(asctime)s - %(levelname)s - %(message)s')
 
     port = option_reading()
 
@@ -47,6 +49,8 @@ def main():
 
     print(
         f"Server turned on with address: {host_address} and the port: {port}. STATUS: Ready to interact")
+
+    logging.warning('SERVER STARTED ON IP: ' + host_address + ', ' + 'IN THE PORT: ' + str(port))
 
     while True:
         server_socket.listen(16)
