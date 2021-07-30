@@ -9,15 +9,14 @@ from tcp.protocol import protocol_tcp
 
 
 def option_reading():
-    (opt, arg) = getopt.getopt(sys.argv[1:], 'h:p:z:r:', [
-        'host=', 'port=', 'zone=', 'rol='])
+    (opt, arg) = getopt.getopt(sys.argv[1:], 'h:p:z:', [
+        'host=', 'port=', 'zone='])
 
-    if len(opt) != 4:
+    if len(opt) != 3:
         print(f"""Error: expected 4 options:
 - [-h] or [--host]
 - [-p] or [--port] 
-- [-z] or [--zone] 
-- [-r] or [--rol] 
+- [-z] or [--zone]  
 You entered: {len(opt)} options.
 """)
         sys.exit(0)
@@ -32,18 +31,15 @@ You entered: {len(opt)} options.
         elif op in ['-z', '--zone']:
             zone = str(arg)
 
-        elif op in ['-r', '--rol']:
-            rol = str(arg)
-
         else:
             print('The option entered is not valid.')
 
-    assert (host, port, zone, rol) is not None
-    return host, port, zone, rol
+    assert (host, port, zone) is not None
+    return host, port, zone
 
 
 def main():
-    host, port, zone, rol = '192.168.1.6', 5006, 'administrative', 'client'  # option_reading()
+    host, port, zone = '192.168.1.6', 5005, 'administrative'  # option_reading()
 
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((host, port))
@@ -51,7 +47,7 @@ def main():
     print(
         f'Connected to the Help Chat server at address: {host} and at port: {port}')
 
-    protocol_tcp(client_socket, zone, rol)
+    protocol_tcp(client_socket, zone)
 
 
 if __name__ == '__main__':

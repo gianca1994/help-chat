@@ -21,45 +21,50 @@ class Package(enum.Enum):
 
 
 def protocol_tcp(client_socket, client_address):
-    client_socket.send(WriteOutgoingData.initial_msg().encode())
+    try:
+        client_socket.send(WriteOutgoingData.initial_msg().encode())
 
-    while True:
-        incoming_data = (client_socket.recv(4096).decode()).split(split)
-        data = incoming_data.pop(0)
+        while True:
 
-        if data == Package.exit.value:
-            print('Client', client_address, 'disconnected')
-            client_socket.send('exit_client'.encode())
-            client_socket.close()
+            incoming_data = (client_socket.recv(4096).decode()).split(split)
+            data = incoming_data.pop(0)
 
-        elif data == Package.register_or_login.value:
-            register_login_valid = HandleIncomingData.register_or_login(incoming_data)
+            if data == Package.exit.value:
+                client_socket.send(WriteOutgoingData.exit_user(client_address).encode())
+                client_socket.close()
 
-            if not register_login_valid:
-                client_socket.send(Package.exit.value.encode())
+            elif data == Package.register_or_login.value:
+                register_login_valid = HandleIncomingData.register_or_login(incoming_data)
 
-            client_socket.send(WriteOutgoingData.validation_register_login(register_login_valid).encode())
-            sleep(0.05)
+                if register_login_valid[0] and register_login_valid[2]:
+                    client_socket.send(WriteOutgoingData.validation_register_login(register_login_valid).encode())
+                    sleep(0.05)
 
-            if register_login_valid:
-                user = UserData(
-                    user_name=incoming_data[1],
-                    password=incoming_data[2],
-                    zone=incoming_data[3],
-                    rol=incoming_data[4]
-                )
+                    user = UserData(
+                        user_name=incoming_data[1],
+                        password=incoming_data[2],
+                        zone=incoming_data[3]
+                    )
 
-                zone_selected = WriteOutgoingData.zone_rol(
-                    user.get_user_name(),
-                    user.get_zone(),
-                    user.get_rol()
-                )
+                    user.set_rol('client') if not register_login_valid[1] else user.set_rol('operator')
 
-                client_socket.send(WriteOutgoingData.user_logged_menu(
-                    incoming_data[1],
-                    incoming_data[3],
-                    zone_selected
-                ).encode())
+                    zone_selected = WriteOutgoingData.zone_rol(
+                        user.get_user_name(),
+                        user.get_zone(),
+                        user.get_rol()
+                    )
+
+                    client_socket.send(WriteOutgoingData.user_logged_menu(
+                        incoming_data[1],
+                        user.get_rol(),
+                        incoming_data[3],
+                        zone_selected
+                    ).encode())
+                else:
+                    client_socket.send(WriteOutgoingData.exit_user(client_address).encode())
+                    client_socket.close()
+    except:
+        pass
 
 
 class HandleIncomingData:
@@ -67,17 +72,21 @@ class HandleIncomingData:
     @staticmethod
     def register_or_login(incoming_data):
         if incoming_data[0] == '1':
-            return register_user(incoming_data[1], incoming_data[2], incoming_data[4])
+            register = [register_user(incoming_data[1], incoming_data[2]), False, False]
+            return register
         elif incoming_data[0] == '2':
-            return login_user(incoming_data[1], incoming_data[2], incoming_data[4])
+            login = list(login_user(incoming_data[1], incoming_data[2]))
+            login.append(True)
+            return login
 
 
 class WriteOutgoingData:
 
     @staticmethod
-    def exit_user():
-        output_data = Package.exit.value + \
-                      split + 'See you later!'
+    def exit_user(client_address):
+        print('Client', client_address, 'disconnected')
+
+        output_data = Package.exit.value + split + 'Registration completed or login failed! start again!!, See you later!'
         return output_data
 
     @staticmethod
@@ -127,9 +136,11 @@ class WriteOutgoingData:
                     return zone_sales.get_all_operators_sales()
 
     @staticmethod
-    def user_logged_menu(username, zone_selected, users_in_zone):
+    def user_logged_menu(username, rol, zone_selected, users_in_zone):
+
         return Package.user_logged_menu.value + split + \
                f'Welcome {username} to the help chat system...' + split + \
+               f'The role of your account is: {rol}' + split + \
                'You are currently in a waiting queue, you will enter a room as soon as you are assigned a client or operator...' + split + \
-               f'customers in the area: {zone_selected}, in the queue: {users_in_zone}' + split + \
+               f'{rol} in the area: {zone_selected}, in the queue: {users_in_zone}' + split + \
                'As soon as an operator is available, he will go to a chat room'

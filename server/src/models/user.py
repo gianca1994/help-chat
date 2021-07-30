@@ -1,9 +1,9 @@
 class UserData:
-    def __init__(self, user_name, password, zone, rol):
+    def __init__(self, user_name, password, zone):
         self.user_name = user_name
         self.password = password
         self.zone = zone
-        self.rol = rol
+        self.rol = 'client'
 
     def get_user_name(self):
         return self.user_name

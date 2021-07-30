@@ -27,7 +27,7 @@ def check_user_existence(username):
     conn.close()
 
 
-def register_user(username, password, rol):
+def register_user(username, password):
     conn = connect(database="DataBase.db")
     user_register = False
     try:
@@ -37,7 +37,7 @@ def register_user(username, password, rol):
             cur.execute("INSERT INTO users (user_name, password, operator) "
                         f"VALUES ('{username}', '{password_encrypted}', False)")
             conn.commit()
-            logging.warning('<< REGISTER >> ' + ' USERNAME: ' + username + ' - ' + 'ROL: ' + rol)
+            logging.warning('<< REGISTER >> ' + ' USERNAME: ' + username + ' - ' + 'ROL: client')
             user_register = True
 
         return user_register
@@ -46,19 +46,27 @@ def register_user(username, password, rol):
     conn.close()
 
 
-def login_user(username, password, rol):
+def login_user(username, password):
     conn = connect(database="DataBase.db")
     validate_user = False
+    is_operator = False
 
     try:
         cur = conn.cursor()
         cur.execute("SELECT * FROM users")
+
         for i in cur.fetchall():
             if i[1] == username:
                 if validate_password(i[2], password):
+                    if i[3]:
+                        is_operator = True
+                    if is_operator:
+                        logging.warning('<< LOGIN >> ' + ' USERNAME: ' + username + ' - ' + 'ROL: operator')
+                    else:
+                        logging.warning('<< LOGIN >> ' + ' USERNAME: ' + username + ' - ' + 'ROL: client')
                     validate_user = True
-                    logging.warning('<< LOGIN >> ' + ' USERNAME: ' + username + ' - ' + 'ROL: ' + rol)
-        return validate_user
+
+                return validate_user, is_operator
     except sqlite3.OperationalError as error:
         print(error)
     conn.close()

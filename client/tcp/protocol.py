@@ -13,18 +13,18 @@ class Package(enum.Enum):
     user_logged_menu = '4'
 
 
-def protocol_tcp(client_socket, zone, rol):
+def protocol_tcp(client_socket, zone):
     while True:
         incoming_data = (client_socket.recv(4096).decode()).split(split)
         data = incoming_data.pop(0)
 
         if data == Package.exit.value:
-            client_socket.send(Package.exit.value.encode())
+            print(incoming_data[0])
             Functions.timer_exit(5)
 
         elif data == Package.initial_msg.value:
             HandleIncomingData.initial_msg(incoming_data[0])
-            client_socket.send(WriteOutgoingData.register_or_login(zone, rol).encode())
+            client_socket.send(WriteOutgoingData.register_or_login(zone).encode())
 
         elif data == Package.validation_register_login.value:
             HandleIncomingData.validation_register_login(incoming_data[0])
@@ -35,7 +35,8 @@ def protocol_tcp(client_socket, zone, rol):
                 incoming_data[0],
                 incoming_data[1],
                 incoming_data[2],
-                incoming_data[3]
+                incoming_data[3],
+                incoming_data[4]
             )
 
 
@@ -54,8 +55,10 @@ class HandleIncomingData:
         print(incoming_data)
 
     @staticmethod
-    def user_logged_menu(incoming_data_one, incoming_data_two, zone_selected, incoming_data_four):
+    def user_logged_menu(incoming_data_one, rol, incoming_data_two, zone_selected, incoming_data_four):
         print(incoming_data_one)
+        print(rol)
+        print()
         print(incoming_data_two)
         print()
         print(zone_selected)
@@ -66,12 +69,12 @@ class HandleIncomingData:
 class WriteOutgoingData:
 
     @staticmethod
-    def register_or_login(zone, rol):
+    def register_or_login(zone):
         signup_or_signing = int(input('Then enter 1- SIGN UP or 2- SIGN IN: '))
         user_name = str(input("Enter username: "))
         password = str(input("Enter password: "))
         output_data = Package.register_or_login.value + split + str(
-            signup_or_signing) + split + user_name + split + password + split + zone + split + rol
+            signup_or_signing) + split + user_name + split + password + split + zone
         return output_data
 
 
