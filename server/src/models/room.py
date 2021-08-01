@@ -10,14 +10,14 @@ class Room:
     def set_id_room(self, id_room):
         self.id_room = id_room
 
-    def get_id_operator(self):
+    def get_operator(self):
         return self.operator
 
-    def set_id_operator(self, operator):
+    def set_operator(self, operator):
         self.operator = operator
 
-    def get_id_client(self):
+    def get_client(self):
         return self.client
 
-    def set_id_client(self, client):
+    def set_client(self, client):
         self.client = client
