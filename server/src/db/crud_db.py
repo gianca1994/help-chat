@@ -66,7 +66,7 @@ def login_user(username, password):
                         logging.warning('<< LOGIN >> ' + ' USERNAME: ' + username + ' - ' + 'ROL: client')
                     validate_user = True
 
-                return validate_user, is_operator
+            return validate_user, is_operator
     except sqlite3.OperationalError as error:
         print(error)
     conn.close()

@@ -27,8 +27,7 @@ def protocol_tcp(client_socket, zone):
             client_socket.send(WriteOutgoingData.register_or_login(zone).encode())
 
         elif data == Package.validation_register_login.value:
-            HandleIncomingData.validation_register_login(incoming_data[0])
-            Functions.timer_start(3)
+            HandleIncomingData.validation_register_login(3, incoming_data[0])
 
         elif data == Package.user_logged_menu.value:
             HandleIncomingData.user_logged_menu(
@@ -51,8 +50,13 @@ class HandleIncomingData:
         print(incoming_data)
 
     @staticmethod
-    def validation_register_login(incoming_data):
+    def validation_register_login(seconds, incoming_data):
+        os.system('clear')
         print(incoming_data)
+        for i in range(seconds, 0, -1):
+            print(f'Starting in {i} seconds...')
+            sleep(1)
+        os.system('clear')
 
     @staticmethod
     def user_logged_menu(incoming_data_one, rol, incoming_data_two, zone_selected, incoming_data_four):
@@ -79,13 +83,6 @@ class WriteOutgoingData:
 
 
 class Functions:
-
-    @staticmethod
-    def timer_start(seconds):
-        for i in range(seconds, 0, -1):
-            print(f'Starting in {i} seconds...')
-            sleep(1)
-        os.system('clear')
 
     @staticmethod
     def timer_exit(seconds):

@@ -60,9 +60,11 @@ def protocol_tcp(client_socket, client_address):
                         incoming_data[3],
                         zone_selected
                     ).encode())
+
                 else:
                     client_socket.send(WriteOutgoingData.exit_user(client_address).encode())
                     client_socket.close()
+
     except:
         pass
 

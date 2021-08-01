@@ -5,7 +5,7 @@ import socket
 import sys
 
 # py main.py -h 192.168.1.6 -p 5000 -z argentina -r gianca
-from tcp.protocol import protocol_tcp
+from protocol import protocol_tcp
 
 
 def option_reading():
@@ -39,7 +39,7 @@ You entered: {len(opt)} options.
 
 
 def main():
-    host, port, zone = '192.168.1.6', 5005, 'administrative'  # option_reading()
+    host, port, zone = '192.168.1.6', 5000, 'administrative'  # option_reading()
 
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((host, port))

@@ -40,7 +40,7 @@ def option_reading():
 
 def main():
     check_existence_db()
-    logging.basicConfig(filename='server.log', encoding='utf-8', format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(filename="server.log", encoding='utf-8', format='%(asctime)s - %(levelname)s - %(message)s')
 
     port = option_reading()
 
@@ -53,7 +53,7 @@ def main():
     logging.warning('SERVER STARTED ON IP: ' + host_address + ', ' + 'IN THE PORT: ' + str(port))
 
     while True:
-        server_socket.listen(16)
+        server_socket.listen()
 
         client_socket, client_address = server_socket.accept()
         print(f'\nGot a connection from: {client_address}')
