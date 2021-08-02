@@ -4,7 +4,6 @@ import getopt
 import socket
 import sys
 
-# py main.py -h 192.168.1.6 -p 5000 -z argentina -r gianca
 from protocol import protocol_tcp
 
 
@@ -47,7 +46,7 @@ def main():
     print(
         f'Connected to the Help Chat server at address: {host} and at port: {port}')
 
-    protocol_tcp(client_socket, zone)
+    protocol_tcp(client_socket, zone, host, port)
 
 
 if __name__ == '__main__':

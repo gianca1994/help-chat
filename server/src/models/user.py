@@ -4,6 +4,7 @@ class UserData:
         self.password = password
         self.zone = zone
         self.rol = 'client'
+        self.user_address = ()
 
     def get_user_name(self):
         return self.user_name
@@ -28,3 +29,9 @@ class UserData:
 
     def set_rol(self, rol):
         self.rol = rol
+
+    def get_user_address(self):
+        return self.user_address
+
+    def set_user_address(self, user_address):
+        self.user_address = user_address

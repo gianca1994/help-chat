@@ -1,5 +1,6 @@
 import enum
 import os
+import socket
 from time import sleep
 
 split = '!¡"?#=$)%(&/'
@@ -11,9 +12,10 @@ class Package(enum.Enum):
     register_or_login = '2'
     validation_register_login = '3'
     user_logged_menu = '4'
+    private_chat = '5'
 
 
-def protocol_tcp(client_socket, zone):
+def protocol_tcp(client_socket, zone, host, port):
     while True:
         incoming_data = (client_socket.recv(4096).decode()).split(split)
         data = incoming_data.pop(0)
@@ -37,6 +39,19 @@ def protocol_tcp(client_socket, zone):
                 incoming_data[3],
                 incoming_data[4]
             )
+
+        elif data == Package.private_chat.value:
+            chat_socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            chat_socket_client.connect((host, port))
+
+            print(incoming_data[0])
+
+            while True:
+                incoming_data = (chat_socket_client.recv(1024).decode())
+                print(incoming_data)
+
+                message = input("Message >> ")
+                chat_socket_client.send(message.encode())
 
 
 class HandleIncomingData:

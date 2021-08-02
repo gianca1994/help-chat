@@ -21,3 +21,6 @@ class Room:
 
     def set_client(self, client):
         self.client = client
+
+    def __repr__(self):
+        return f'Room(Operator: {self.operator}, Client: {self.client})'

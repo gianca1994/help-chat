@@ -57,8 +57,9 @@ def main():
 
         client_socket, client_address = server_socket.accept()
         print(f'\nGot a connection from: {client_address}')
+        logging.warning('ACCEPTED CONNECTION OF THE IP ADDRESS: ' + client_address[0])
 
-        multithreading = threading.Thread(target=protocol_tcp, args=(client_socket, client_address))
+        multithreading = threading.Thread(target=protocol_tcp, args=(client_socket, client_address, port))
         multithreading.start()
 
 
