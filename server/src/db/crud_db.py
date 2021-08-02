@@ -39,7 +39,6 @@ def register_user(username, password):
             conn.commit()
             logging.warning('<< REGISTER >> ' + ' USERNAME: ' + username + ' - ' + 'ROL: client')
             user_register = True
-
         return user_register
     except sqlite3.OperationalError as error:
         print(error)
@@ -54,19 +53,16 @@ def login_user(username, password):
     try:
         cur = conn.cursor()
         cur.execute("SELECT * FROM users")
-
         for i in cur.fetchall():
             if i[1] == username:
                 if validate_password(i[2], password):
                     if i[3]:
                         is_operator = True
-                    if is_operator:
                         logging.warning('<< LOGIN >> ' + ' USERNAME: ' + username + ' - ' + 'ROL: operator')
                     else:
                         logging.warning('<< LOGIN >> ' + ' USERNAME: ' + username + ' - ' + 'ROL: client')
                     validate_user = True
-
-            return validate_user, is_operator
+        return validate_user, is_operator
     except sqlite3.OperationalError as error:
         print(error)
     conn.close()
