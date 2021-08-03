@@ -44,8 +44,6 @@ def protocol_tcp(client_socket, zone, host, port):
             chat_socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             chat_socket_client.connect((host, port))
 
-            print(incoming_data[0])
-
             while True:
                 incoming_data = (chat_socket_client.recv(1024).decode())
                 print(incoming_data)

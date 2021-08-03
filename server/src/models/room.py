@@ -1,8 +1,8 @@
 class Room:
-    def __init__(self, id_room, operator, client):
-        self.id_room = id_room
-        self.operator = operator
-        self.client = client
+    def __init__(self):
+        self.id_room = 0
+        self.operator = ''
+        self.client = ''
 
     def get_id_room(self):
         return self.id_room

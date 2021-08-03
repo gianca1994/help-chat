@@ -1,5 +1,6 @@
 import enum
 import socket
+import threading
 from time import sleep
 
 from src.models.user import UserData
@@ -51,16 +52,17 @@ def protocol_tcp(client_socket, client_address, port):
                     user.set_rol('client') if not register_login_valid[1] else user.set_rol('operator')
                     user.set_user_address(client_address)
 
-                    zone_selected = WriteOutgoingData.zone_rol(
+                    zone_selected, private_chatt = WriteOutgoingData.zone_rol(
                         user.get_user_name(),
                         user.get_zone(),
-                        user.get_rol(),
-                        port
+                        user.get_rol()
                     )
 
-                    if zone_selected is str:
-                        data = Package.private_chat.value + split + f'Chat started with the operator: {zone_selected}'
-                        client_socket.send(data.encode())
+                    if private_chatt:
+                        msg = Package.private_chat.value + split + ''
+                        client_socket.send(msg.encode())
+                        Function.private_chat(port)
+
                     else:
                         client_socket.send(WriteOutgoingData.user_logged_menu(
                             incoming_data[1],
@@ -113,7 +115,7 @@ class WriteOutgoingData:
             return Package.validation_register_login.value + split + 'Failed to load a user or existing user if you are registering.'
 
     @staticmethod
-    def zone_rol(username, zone, rol, port):
+    def zone_rol(username, zone, rol):
         list_zones = ('technique', 'administrative', 'sales')
         list_roles = ('client', 'operator')
 
@@ -126,10 +128,9 @@ class WriteOutgoingData:
                 zone_administrative.set_client_administrative(username)
 
                 if Function.user_check_in_zone(zone_administrative.get_all_operators_administrative()):
-                    Function.private_chat(port=port)
-                    return zone_administrative.get_operator_administrative()
+                    return zone_administrative.get_operator_administrative(), True
                 else:
-                    return zone_administrative.get_all_clients_administrative()
+                    return zone_administrative.get_all_clients_administrative(), False
 
             elif zone == list_zones[2]:
                 zone_sales.set_client_sales(username)
@@ -142,7 +143,7 @@ class WriteOutgoingData:
 
             elif zone == list_zones[1]:
                 zone_administrative.set_operator_administrative(username)
-                return zone_administrative.get_all_operators_administrative()
+                return zone_administrative.get_all_operators_administrative(), False
 
             elif zone == list_zones[2]:
                 zone_sales.set_operator_sales(username)
@@ -168,18 +169,27 @@ class Function:
     @staticmethod
     def private_chat(port):
         chat_socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        chat_socket_operator = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        chat_socket_client.bind(('', port)), chat_socket_operator.bind(('', port))
+        chat_socket_client.bind(('', port))
 
         while True:
-            chat_socket_client.listen(1), chat_socket_operator.listen(1)
-            chat_socket_client.accept(), chat_socket_operator.accept()
+            chat_socket_client.listen(2)
+            c_socket, c_address = chat_socket_client.accept()
 
-            incoming_data_client = (chat_socket_client.recv(1024).decode())
-            incoming_data_operator = (chat_socket_operator.recv(1024).decode())
+            multithreading = threading.Thread(target=private_chat_clients, args=(chat_socket_client, c_address))
+            multithreading.start()
 
-            if len(incoming_data_client) > 0:
-                chat_socket_operator.send(incoming_data_client.encode())
-            elif len(incoming_data_operator) > 0:
-                chat_socket_client.send(incoming_data_operator.encode())
+
+def private_chat_clients(chat_socket_client, c_address):
+    try:
+        output_data = Package.private_chat.value + split + f'Chat started'
+        chat_socket_client.send(output_data.encode())
+
+        while True:
+            incoming_data = chat_socket_client.recv(1024).decode()
+            print(incoming_data)
+
+            message = input('Message >> ')
+            chat_socket_client.send(message.encode())
+
+    except:
+        pass
