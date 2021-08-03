@@ -1,0 +1,12 @@
+Some of the possible future improvements that could be considered are:
+
+1. Establish a cryptographic protocol such as Diffie-Hellman to avoid possible "man-in-the-middle" vulnerabilities.
+2. Check the integrity of the data when registering users, to avoid possible sql injections.
+3. Expand the data required at the time of registration, this could be beneficial in the future to perform "data science", as well as having the email of the registered user, to send notifications.
+4. Perform two-factor authentication, using the user's email address. A code would be sent to the user when trying to log in, which must be entered to be able to log in.
+5. Verify accounts via email.
+6. Limit the number of simultaneous connections to avoid overloading the server.
+7. Limit the number of consecutive login attempts, i.e., if a user enters the wrong password more than 5 times in a short period of time, he/she will have to wait a certain amount of time to try again or an email could be sent to confirm the identity. We would avoid brute force attacks.
+8. The operator parameter was extracted from the parameters entered by the client and added as another attribute of a user, so that only those who have access to the database can give a user access to be an operator.
+9. Use a database with connection to give more security to the data, such as "MySql" or "Postgres".
+10. In case of receiving multiple connection attempts from the same ip, the ip address should be blocked for a certain period of time to avoid possible DDOS attacks.
