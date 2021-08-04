@@ -12,7 +12,7 @@ def option_reading():
         'host=', 'port=', 'zone='])
 
     if len(opt) != 3:
-        print(f"""Error: expected 4 options:
+        print(f"""Error: expected 3 options:
 - [-h] or [--host]
 - [-p] or [--port] 
 - [-z] or [--zone]  
@@ -38,7 +38,7 @@ You entered: {len(opt)} options.
 
 
 def main():
-    host, port, zone = '192.168.1.6', 5000, 'administrative'  # option_reading()
+    host, port, zone = '192.168.1.6', 5001, 'technique'  # option_reading()
 
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((host, port))
@@ -46,7 +46,7 @@ def main():
     print(
         f'Connected to the Help Chat server at address: {host} and at port: {port}')
 
-    protocol_tcp(client_socket, zone, host, port)
+    protocol_tcp(client_socket, zone)
 
 
 if __name__ == '__main__':

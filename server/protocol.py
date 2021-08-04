@@ -1,6 +1,4 @@
 import enum
-import socket
-import threading
 from time import sleep
 
 from src.models.user import UserData
@@ -23,7 +21,7 @@ class Package(enum.Enum):
     private_chat = '5'
 
 
-def protocol_tcp(client_socket, client_address, port):
+def protocol_tcp(client_socket, client_address):
     try:
         client_socket.send(WriteOutgoingData.initial_msg().encode())
 
@@ -52,17 +50,34 @@ def protocol_tcp(client_socket, client_address, port):
                     user.set_rol('client') if not register_login_valid[1] else user.set_rol('operator')
                     user.set_user_address(client_address)
 
-                    zone_selected, private_chatt = WriteOutgoingData.zone_rol(
+                    zone_selected, private_chat = WriteOutgoingData.zone_rol(
                         user.get_user_name(),
                         user.get_zone(),
                         user.get_rol()
                     )
 
-                    if private_chatt:
-                        msg = Package.private_chat.value + split + ''
+                    if private_chat:
+                        user_responding = user.get_user_name()
+                        msg = Package.private_chat.value + split + 'Chat started with ' + split + zone_selected
                         client_socket.send(msg.encode())
-                        Function.private_chat(port)
 
+                        while True:
+                            incoming_data = (client_socket.recv(1024).decode())
+                            if not incoming_data == '/exit':
+
+                                print(f'{user_responding} >> ' + incoming_data)
+                                message = input('Message >> ')
+
+                                if not message == '/exit':
+                                    client_socket.send(message.encode())
+                                else:
+                                    client_socket.send(WriteOutgoingData.conversation_ended(client_address).encode())
+                                    client_socket.close()
+                                    break
+                            else:
+                                client_socket.send(WriteOutgoingData.conversation_ended(client_address).encode())
+                                client_socket.close()
+                                break
                     else:
                         client_socket.send(WriteOutgoingData.user_logged_menu(
                             incoming_data[1],
@@ -102,6 +117,11 @@ class WriteOutgoingData:
         return output_data
 
     @staticmethod
+    def conversation_ended(client_address):
+        print('Client', client_address, 'disconnected')
+        return 'The conversation is over!, See you later!'
+
+    @staticmethod
     def initial_msg():
         output_data = Package.initial_msg.value + \
                       split + 'Welcome to Help Chat (v0.1)!'
@@ -121,33 +141,47 @@ class WriteOutgoingData:
 
         if rol == list_roles[0]:
             if zone == list_zones[0]:
-                zone_technique.set_client_technique(username)
-                return zone_technique.get_all_clients_technique()
+                if Function.user_check_in_zone(zone_technique.get_all_operators_technique()):
+                    return zone_technique.get_operator_technique(), True
+                else:
+                    zone_technique.set_client_technique(username)
+                    return zone_technique.get_all_clients_technique(), False
 
             elif zone == list_zones[1]:
-                zone_administrative.set_client_administrative(username)
-
                 if Function.user_check_in_zone(zone_administrative.get_all_operators_administrative()):
                     return zone_administrative.get_operator_administrative(), True
                 else:
+                    zone_administrative.set_client_administrative(username)
                     return zone_administrative.get_all_clients_administrative(), False
 
             elif zone == list_zones[2]:
-                zone_sales.set_client_sales(username)
-                return zone_sales.get_all_clients_sales()
+                if Function.user_check_in_zone(zone_sales.get_all_operators_sales()):
+                    return zone_sales.get_operator_sales(), True
+                else:
+                    zone_sales.set_client_sales(username)
+                    return zone_sales.get_all_clients_sales(), False
 
         elif rol == list_roles[1]:
             if zone == list_zones[0]:
-                zone_technique.set_operator_technique(username)
-                return zone_technique.get_all_operators_technique()
+                if Function.user_check_in_zone(zone_technique.get_all_clients_technique()):
+                    return zone_technique.get_client_technique(), True
+                else:
+                    zone_technique.set_operator_technique(username)
+                    return zone_technique.get_all_operators_technique(), False
 
             elif zone == list_zones[1]:
-                zone_administrative.set_operator_administrative(username)
-                return zone_administrative.get_all_operators_administrative(), False
+                if Function.user_check_in_zone(zone_administrative.get_all_clients_administrative()):
+                    return zone_administrative.get_client_administrative(), True
+                else:
+                    zone_administrative.set_operator_administrative(username)
+                    return zone_administrative.get_all_operators_administrative(), False
 
             elif zone == list_zones[2]:
-                zone_sales.set_operator_sales(username)
-                return zone_sales.get_all_operators_sales()
+                if Function.user_check_in_zone(zone_sales.get_all_clients_sales()):
+                    return zone_sales.get_client_sales(), True
+                else:
+                    zone_sales.set_operator_sales(username)
+                    return zone_sales.get_all_operators_sales(), False
 
     @staticmethod
     def user_logged_menu(username, rol, zone_selected, users_in_zone):
@@ -165,31 +199,3 @@ class Function:
     @staticmethod
     def user_check_in_zone(user_zone):
         return True if len(user_zone) > 0 else False
-
-    @staticmethod
-    def private_chat(port):
-        chat_socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        chat_socket_client.bind(('', port))
-
-        while True:
-            chat_socket_client.listen(2)
-            c_socket, c_address = chat_socket_client.accept()
-
-            multithreading = threading.Thread(target=private_chat_clients, args=(chat_socket_client, c_address))
-            multithreading.start()
-
-
-def private_chat_clients(chat_socket_client, c_address):
-    try:
-        output_data = Package.private_chat.value + split + f'Chat started'
-        chat_socket_client.send(output_data.encode())
-
-        while True:
-            incoming_data = chat_socket_client.recv(1024).decode()
-            print(incoming_data)
-
-            message = input('Message >> ')
-            chat_socket_client.send(message.encode())
-
-    except:
-        pass
