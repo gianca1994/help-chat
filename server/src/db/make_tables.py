@@ -3,6 +3,13 @@ from sqlite3.dbapi2 import connect
 
 
 def make_tables():
+    """
+    Function used to create the user table.
+
+    :return:
+        none
+    """
+
     conn = connect(database="DataBase.db")
 
     try:

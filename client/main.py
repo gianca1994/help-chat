@@ -8,6 +8,15 @@ from protocol import protocol_tcp
 
 
 def option_reading():
+    """
+    Function used to parse the command line options and parameter list.
+    'arg' is the list of arguments to be parsed.
+
+    :return:
+        type: str(host), int(port), str(zone)
+        returns the host and port on which the server is running,
+        as well as the zone we want to enter.
+    """
     (opt, arg) = getopt.getopt(sys.argv[1:], 'h:p:z:', [
         'host=', 'port=', 'zone='])
 
@@ -38,7 +47,17 @@ You entered: {len(opt)} options.
 
 
 def main():
-    host, port, zone = '192.168.1.6', 5001, 'technique'  # option_reading()
+    """
+    Main function in the client, in charge of setting the arguments
+    that the user enters, creating the socket and connecting to the server.
+
+    Then it calls the function 'protocol_tcp' and sends as argument
+    the socket and the zone to which the client wants to enter.
+
+    :return:
+        none
+    """
+    host, port, zone = option_reading()
 
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((host, port))

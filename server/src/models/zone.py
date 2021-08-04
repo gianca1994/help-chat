@@ -2,6 +2,13 @@ from random import choice
 
 
 class ZoneTechnique:
+    """
+    Class used to store the list of clients and operators that
+    the technical zone will have with their respective getters
+    and setters methods.
+
+    """
+
     client_technique = []
     operator_technique = []
 
@@ -36,6 +43,13 @@ class ZoneTechnique:
 
 
 class ZoneAdministrative:
+    """
+    Class used to store the list of clients and operators that
+    the administrative zone will have with their respective
+    getters and setters methods.
+
+    """
+
     client_administrative = []
     operator_administrative = []
 
@@ -70,6 +84,13 @@ class ZoneAdministrative:
 
 
 class ZoneSales:
+    """
+    Class used to store the list of customers and operators that
+    will have the sales area with their respective getters and
+    setters methods.
+
+    """
+
     client_sales = []
     operator_sales = []
 

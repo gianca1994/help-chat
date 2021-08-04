@@ -5,14 +5,44 @@ import logging
 
 
 def encrypt_password(password):
+    """
+    Function used to encrypt a user's password.
+
+    :param password: string
+    :return:
+        type: string
+        returns the encrypted password
+    """
+
     return generate_password_hash(password=password)
 
 
 def validate_password(encrypted_password, password):
+    """
+    Function that receives the encrypted password from the
+    db and the plaintext password entered by the user.
+    It encrypts the plaintext password and compares it with
+    the one stored in the db.
+
+    :param encrypted_password: string
+    :param password: string
+    :return:
+        type: boolean
+    """
+
     return check_password_hash(encrypted_password, password)
 
 
 def check_user_existence(username):
+    """
+    Function used to check if the user chosen at the time
+    of registration is already stored in the database.
+
+    :param username: string
+    :return:
+        type: boolean
+    """
+
     conn = connect(database="DataBase.db")
     user_exist = False
     try:
@@ -28,6 +58,15 @@ def check_user_existence(username):
 
 
 def register_user(username, password):
+    """
+    Function used to register a new user in the database.
+
+    :param username: string
+    :param password: string
+    :return:
+        type: boolean
+    """
+
     conn = connect(database="DataBase.db")
     user_register = False
     try:
@@ -46,6 +85,15 @@ def register_user(username, password):
 
 
 def login_user(username, password):
+    """
+    Function used for user login.
+
+    :param username: string
+    :param password: string
+    :return:
+        type: tuple(boolean, boolean)
+    """
+
     conn = connect(database="DataBase.db")
     validate_user = False
     is_operator = False

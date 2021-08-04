@@ -9,12 +9,18 @@ import logging
 from protocol import protocol_tcp
 from utilities.check_db_existence import check_existence_db
 
-host_address = '192.168.1.6'  # socket.gethostbyname(socket.getfqdn())
+host_address = socket.gethostbyname(socket.getfqdn())
 
-
-# py main.py -p 5000
 
 def option_reading():
+    """
+    Function used to parse the command line options and parameter list.
+    'arg' is the list of arguments to be parsed.
+
+    :return:
+        type: int(port)
+        returns the port on which the server will run
+    """
     (opt, arg) = getopt.getopt(sys.argv[1:], 'p:', ['port='])
 
     if len(opt) != 1:
@@ -39,6 +45,18 @@ def option_reading():
 
 
 def main():
+    """
+    Main function in the server, in charge of checking if the db exists,
+    configuring the log system, creating the socket with the chosen port,
+    launching the server and listening for connections from the clients.
+
+    When a client accesses the server, it calls the 'protocol_tcp'
+    function and sends as a parameter the socket for that client,
+    the client's ip and its port.
+
+    :return:
+        none
+    """
     check_existence_db()
     logging.basicConfig(filename="server.log", encoding='utf-8', format='%(asctime)s - %(levelname)s - %(message)s')
 
