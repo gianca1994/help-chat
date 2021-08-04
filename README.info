@@ -1,0 +1,26 @@
+- Decisiones:
+
+1. Se saco el parametro "-r o --rol" en el get-opt, porque se agrego como rango del usuario en la base de datos.
+
+2. El protocolo.py consta de:
+  a. Una constante llamada "split_msg" el cual contiene un string de digitos. (ciente == servidor)
+  b. Una clase enumerate llamada "Package" la cual contiene todos los nombres y valores de los paquetes a enviar o recibir. (ciente == servidor)
+  c. Una funcion "protocol_tcp" encargada de todo el envio y recibo de paquetes desde el cliente al servidor y viceversa. (ciente == servidor)
+     - Tanto en e cliente como servidor, el paquete que llega como string se le hace un split() method y se aplica en "split_msg" convirtiendo a este 
+       string en una lista, en la cual, el primer indice sera el valor del paquete de la clase Pakage entonces se aplica pop(0) para extraerlo de 
+       la lista para hacer la comparacion y solo se deja el mensaje en la variable. (ciente == servidor)
+  d. Una clase llamada "HandleIncomingData" para almacenar todas las funciones que trabajaran la informacion recibida. (ciente == servidor)
+  e. Una clase llamada "WriteOutgoingData" para almacenar todas las funciones que escribiran la informacion enviada. (ciente == servidor)
+  f. Una clase llamada "Function" encargada de ejecutar todas las funciones que no escriban ni reciban informacion del cliente al servidor o viceversa. 
+     (ciente == servidor)
+     
+3. Se crearon 2 modelos, uno para usuarios y otro para las zonas, el de usuario, contiene los datos basicos (username, password, rol y la zona elegida)
+   y el modelo de las zonas contiene 3 clases, una clase para cada zona, esas clases tienen 2 listas, una para almacenar operarios de esa zona y otra 
+   para almacenar los clientes que eligieron esa zona, como asi tambien todos los getter y setter correspondientes.
+   - Al momento de elegir un cliente, se realiza el metodo pop(0) porque el primer cliente en llegar, debera ser el primer cliente atentido, ahora al
+     seleccionar un operador, se aplica un "choice" porque cualquier operador que este a la espera debera poder atender.
+     
+4. En el crud de la db se definio una funcion para register, otra para login, luego tenemos otras 3 funciones:
+   - La funcion para encriptar la password (Usada al momento de registrar un nuevo usuario)
+   - La funcion para validar la password (Usada al momento del inicio de sesión de un usuario)
+   - Por ultimo, la funcion para chequear la existencia de un username en la base de datos (Usada al momento de registrar un nuevo usuario)
