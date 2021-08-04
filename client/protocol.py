@@ -45,7 +45,7 @@ def protocol_tcp(client_socket, zone):
 
         if data == Package.exit.value:
             print(incoming_data[0])
-            Functions.timer_exit(5)
+            Function.timer_exit(5)
 
         elif data == Package.initial_msg.value:
             HandleIncomingData.initial_msg(incoming_data[0])
@@ -71,7 +71,7 @@ def protocol_tcp(client_socket, zone):
                 incoming_data = (client_socket.recv(1024).decode())
 
                 if incoming_data == msg_exit:
-                    Functions.timer_exit(3)
+                    Function.timer_exit(3)
                 else:
                     print(f'{user_responding} >> ' + incoming_data)
 
@@ -148,7 +148,7 @@ class WriteOutgoingData:
         return output_data
 
 
-class Functions:
+class Function:
     """
     Class used for functions that are executed on the same
     client without resorting to writing a package.
