@@ -1,9 +1,11 @@
 import enum
 import os
+from random import randint
 from time import sleep
 
 split_msg = '!¡"?#=$)%(&/'
 msg_exit = 'The conversation is over!, See you later!'
+other_user = ''
 
 
 class Package(enum.Enum):
@@ -67,16 +69,25 @@ def protocol_tcp(client_socket, zone):
             user_responding = incoming_data[1]
             print(incoming_data[0] + user_responding)
 
+            if incoming_data[2] == 'operator':
+                message = input('Message >> ')
+                msg = user_responding + split_msg + message
+                client_socket.send(msg.encode())
+
             while True:
-                incoming_data = (client_socket.recv(1024).decode())
+                incoming_data = client_socket.recv(1024).decode()
 
-                if incoming_data == msg_exit:
-                    Function.timer_exit(3)
-                else:
-                    print(f'{user_responding} >> ' + incoming_data)
+                if incoming_data != '':
+                    if incoming_data == msg_exit:
+                        Function.timer_exit(3)
+                    else:
+                        print(f'{user_responding} >> ' + incoming_data)
 
-                    message = input('Message >> ')
-                    client_socket.send(message.encode())
+                        message = input('Message >> ')
+
+                        msg = user_responding + split_msg + message
+
+                        client_socket.send(msg.encode())
 
 
 class HandleIncomingData:
