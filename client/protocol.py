@@ -79,6 +79,7 @@ def protocol_tcp(client_socket, zone):
                 incoming_data = client_socket.recv(1024).decode()
 
                 if not incoming_data == '':
+
                     if incoming_data == msg_exit:
                         Function.timer_exit(3)
                     else:

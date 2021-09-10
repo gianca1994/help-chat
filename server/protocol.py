@@ -102,19 +102,20 @@ def protocol_tcp(client_socket, client_address):
                                 users['socket'].send(msg.encode())
 
                         while True:
-                            incoming_data = client_socket.recv(1024).decode()
+                            for i in users_private_chat:
+                                socket_received = i['socket']
+                                incoming_data = socket_received.recv(1024).decode()
 
-                            if not incoming_data == '':
-                                print(incoming_data)
-                                if not incoming_data == '/exit':
-                                    for users in users_private_chat:
-                                        if not users['socket'] == client_socket:
-                                            users['socket'].send(incoming_data.encode())
-                                else:
-                                    client_socket.send(
-                                        WriteOutgoingData.conversation_ended(client_address).encode())
-                                    client_socket.close()
-                                    break
+                                if not incoming_data == '':
+                                    if not incoming_data == '/exit':
+                                        for users in users_private_chat:
+                                            if not users['socket'] == socket_received:
+                                                users['socket'].send(incoming_data.encode())
+                                    else:
+                                        client_socket.send(
+                                            WriteOutgoingData.conversation_ended(client_address).encode())
+                                        client_socket.close()
+                                        break
                     else:
                         client_socket.send(WriteOutgoingData.user_logged_menu(
                             incoming_data[1],
