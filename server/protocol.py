@@ -87,37 +87,34 @@ def protocol_tcp(client_socket, client_address):
                         users_private_chat.append(
                             {'socket': client_socket, 'name': user.get_user_name(), 'rol': user.get_rol()})
 
-                        msg1 = Package.private_chat.value + split_msg + \
-                               'Chat started ' + split_msg + \
-                               users_private_chat[1]['name'] + split_msg + \
-                               users_private_chat[0]['rol']
-
-                        users_private_chat[0]['socket'].send(msg1.encode())
-
-                        msg2 = Package.private_chat.value + split_msg + \
-                               'Chat started ' + split_msg + \
-                               users_private_chat[0]['name'] + split_msg + \
-                               users_private_chat[1]['rol']
-
-                        users_private_chat[1]['socket'].send(msg2.encode())
+                        for users in users_private_chat:
+                            if users['rol'] == 'operator':
+                                msg = Package.private_chat.value + split_msg + \
+                                      'Chat started ' + split_msg + \
+                                      'diego' + split_msg + \
+                                      users['rol']
+                                users['socket'].send(msg.encode())
+                            else:
+                                msg = Package.private_chat.value + split_msg + \
+                                      'Chat started ' + split_msg + \
+                                      'gianca' + split_msg + \
+                                      users['rol']
+                                users['socket'].send(msg.encode())
 
                         while True:
                             incoming_data = client_socket.recv(1024).decode()
 
-                            print(incoming_data.split(split_msg))
-
-                            """user_name_to_send = incoming_data[0]
-                            message = incoming_data[1]
-
-                            if not message == '/exit':
-                                for i in users_private_chat:
-                                    if i['name'] == user_name_to_send:
-                                        i['socket'].send(incoming_data.encode())
-                            else:
-                                client_socket.send(
-                                    WriteOutgoingData.conversation_ended(client_address).encode())
-                                client_socket.close()
-                                break"""
+                            if not incoming_data == '':
+                                print(incoming_data)
+                                if not incoming_data == '/exit':
+                                    for users in users_private_chat:
+                                        if not users['socket'] == client_socket:
+                                            users['socket'].send(incoming_data.encode())
+                                else:
+                                    client_socket.send(
+                                        WriteOutgoingData.conversation_ended(client_address).encode())
+                                    client_socket.close()
+                                    break
                     else:
                         client_socket.send(WriteOutgoingData.user_logged_menu(
                             incoming_data[1],
