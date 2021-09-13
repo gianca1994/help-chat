@@ -1,11 +1,14 @@
 import enum
 from time import sleep
 
+from src.db.crud_db import register_user, login_user
+from src.models.private_room import PrivateRoom
 from src.models.user import UserData
 from src.models.zone import ZoneTechnique, ZoneAdministrative, ZoneSales
-from src.db.crud_db import register_user, login_user
 
 users_private_chat = []
+
+private_room = PrivateRoom()
 
 split_msg = '!¡"?#=$)%(&/'
 
@@ -83,25 +86,54 @@ def protocol_tcp(client_socket, client_address):
                     )
 
                     if private_chat:
-                        users_private_chat.append(zone_selected)
-                        users_private_chat.append(
-                            {'socket': client_socket, 'name': user.get_user_name(), 'rol': user.get_rol()})
+                        if not user.get_rol() == 'operator':
+                            private_room.add_new_room(
+                                user.get_user_name(), client_socket, user.get_rol(),
+                                zone_selected['name'], zone_selected['socket'], zone_selected['rol']
+                            )
+                        else:
+                            private_room.add_new_room(
+                                zone_selected['name'], zone_selected['socket'], zone_selected['rol'],
+                                user.get_user_name(), client_socket, user.get_rol()
+                            )
 
-                        for users in users_private_chat:
-                            if users['rol'] == 'operator':
-                                msg = Package.private_chat.value + split_msg + \
-                                      'Chat started ' + split_msg + \
-                                      'diego' + split_msg + \
-                                      users['rol']
-                                users['socket'].send(msg.encode())
-                            else:
-                                msg = Package.private_chat.value + split_msg + \
-                                      'Chat started ' + split_msg + \
-                                      'gianca' + split_msg + \
-                                      users['rol']
-                                users['socket'].send(msg.encode())
+                        msg1 = Package.private_chat.value + split_msg + \
+                               'Chat started ' + split_msg + \
+                               zone_selected['name'] + split_msg + \
+                               user.get_user_name()
+                        zone_selected['socket'].send(msg1.encode())
+
+                        msg2 = Package.private_chat.value + split_msg + \
+                               'Chat started ' + split_msg + \
+                               zone_selected['name'] + split_msg + \
+                               user.get_rol()
+                        client_socket.send(msg2.encode())
 
                         while True:
+                            for i in private_room.get_rooms():
+                                incoming_data = i['client_socket'].recv(1024).decode().split(split_msg)
+                                if len(incoming_data) > 0:
+                                    i['operator_socket'].send(incoming_data[1])
+                                    break
+
+                                incoming_data = i['operator_socket'].recv(1024).decode().split(split_msg)
+                                if len(incoming_data) > 0:
+                                    i['client_socket'].send(incoming_data[1])
+                                    break
+
+                            """
+                            if not incoming_data == '':
+                                user_to_send = incoming_data[0]
+                                message = incoming_data[1]
+
+                                for i in private_room.get_rooms():
+                                    if i['client_name'] == user_to_send:
+                                        i['client_socket'].send(message)
+                                        break
+                                    else:
+                                        i['operator_socket'].send(message)
+                                        break
+
                             for i in users_private_chat:
                                 socket_received = i['socket']
                                 incoming_data = socket_received.recv(1024).decode()
@@ -116,6 +148,7 @@ def protocol_tcp(client_socket, client_address):
                                             WriteOutgoingData.conversation_ended(client_address).encode())
                                         client_socket.close()
                                         break
+                            """
                     else:
                         client_socket.send(WriteOutgoingData.user_logged_menu(
                             incoming_data[1],

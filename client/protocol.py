@@ -1,6 +1,5 @@
 import enum
 import os
-from random import randint
 from time import sleep
 
 split_msg = '!¡"?#=$)%(&/'
@@ -79,14 +78,14 @@ def protocol_tcp(client_socket, zone):
                 incoming_data = client_socket.recv(1024).decode()
 
                 if not incoming_data == '':
-
                     if incoming_data == msg_exit:
                         Function.timer_exit(3)
                     else:
-                        print(f'{user_responding} >> ' + incoming_data)
+                        print(f'{user_responding}: ' + incoming_data)
 
                         message = input('Message >> ')
-                        client_socket.send(message.encode())
+                        final_message = user_responding + split_msg + message
+                        client_socket.send(final_message.encode())
 
 
 class HandleIncomingData:
