@@ -30,3 +30,4 @@ class PrivateRoom:
 
     def get_next_msg(self):
         return self.message_queue.pop(0)
+

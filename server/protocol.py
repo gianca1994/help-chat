@@ -6,9 +6,8 @@ from src.models.private_room import PrivateRoom
 from src.models.user import UserData
 from src.models.zone import ZoneTechnique, ZoneAdministrative, ZoneSales
 
-users_private_chat = []
-
 private_room = PrivateRoom()
+sockets = []
 
 split_msg = '!¡"?#=$)%(&/'
 
@@ -52,6 +51,7 @@ def protocol_tcp(client_socket, client_address):
         none
     """
     try:
+        sockets.append(client_socket)
         client_socket.send(WriteOutgoingData.initial_msg().encode())
 
         while True:
@@ -99,18 +99,27 @@ def protocol_tcp(client_socket, client_address):
 
                         msg1 = Package.private_chat.value + split_msg + \
                                'Chat started ' + split_msg + \
-                               zone_selected['name'] + split_msg + \
-                               user.get_user_name()
+                               user.get_user_name() + split_msg + \
+                               zone_selected['rol'] + split_msg + \
+                               str(client_socket)
                         zone_selected['socket'].send(msg1.encode())
 
                         msg2 = Package.private_chat.value + split_msg + \
                                'Chat started ' + split_msg + \
                                zone_selected['name'] + split_msg + \
-                               user.get_rol()
+                               user.get_rol() + split_msg + \
+                               str(zone_selected['socket'])
                         client_socket.send(msg2.encode())
 
                         while True:
-                            for i in private_room.get_rooms():
+                            for i in sockets:
+                                incoming_data = i.recv(4096).decode().split(split_msg)
+
+                                if incoming_data > 0:
+                                    incoming_data[0].send(incoming_data[1])
+
+                                """
+                                for i in private_room.get_rooms():
                                 incoming_data = i['client_socket'].recv(1024).decode().split(split_msg)
                                 if len(incoming_data) > 0:
                                     i['operator_socket'].send(incoming_data[1])
@@ -120,6 +129,7 @@ def protocol_tcp(client_socket, client_address):
                                 if len(incoming_data) > 0:
                                     i['client_socket'].send(incoming_data[1])
                                     break
+                                """
 
                             """
                             if not incoming_data == '':
