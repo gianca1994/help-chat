@@ -3,7 +3,7 @@ import os
 from time import sleep
 
 split_msg = '!¡"?#=$)%(&/'
-msg_exit = 'The conversation is over!, See you later!'
+msg_exit = '/exit'
 
 
 class Package(enum.Enum):
@@ -64,19 +64,30 @@ def protocol_tcp(client_socket, zone):
             )
 
         elif data == Package.private_chat.value:
+            os.system('clear')
             user_responding = incoming_data[1]
+            is_operator = incoming_data[2]
             print(incoming_data[0] + user_responding)
 
+            if is_operator == 'operator':
+                message = input('Message >> ')
+                final_msg = user_responding + split_msg + message
+                client_socket.send(final_msg.encode())
+            else:
+                print(f'You are currently connected to the operator: {user_responding}, when he starts the chat, you will be able to type. Please wait...')
+
             while True:
-                incoming_data = (client_socket.recv(1024).decode())
+                incoming_data = client_socket.recv(4096).decode()
 
-                if incoming_data == msg_exit:
-                    Function.timer_exit(3)
-                else:
-                    print(f'{user_responding} >> ' + incoming_data)
+                if not incoming_data == '':
+                    if incoming_data == msg_exit:
+                        Function.timer_exit(3)
+                    else:
+                        print(f'{user_responding}: ' + incoming_data)
 
-                    message = input('Message >> ')
-                    client_socket.send(message.encode())
+                        message = input('Message >> ')
+                        final_msg = user_responding + split_msg + message
+                        client_socket.send(final_msg.encode())
 
 
 class HandleIncomingData:

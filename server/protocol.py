@@ -1,9 +1,14 @@
 import enum
+import logging
 from time import sleep
 
+from src.db.crud_db import register_user, login_user
+from src.models.private_room import PrivateRoom
 from src.models.user import UserData
 from src.models.zone import ZoneTechnique, ZoneAdministrative, ZoneSales
-from src.db.crud_db import register_user, login_user
+
+private_room = PrivateRoom()
+sockets = []
 
 split_msg = '!¡"?#=$)%(&/'
 
@@ -74,42 +79,94 @@ def protocol_tcp(client_socket, client_address):
                     user.set_rol('client') if not register_login_valid[1] else user.set_rol('operator')
 
                     zone_selected, private_chat = WriteOutgoingData.zone_rol(
+                        client_socket,
                         user.get_user_name(),
                         user.get_zone(),
                         user.get_rol()
                     )
 
                     if private_chat:
-                        user_responding = user.get_user_name()
-                        msg = Package.private_chat.value + split_msg + 'Chat started with ' + split_msg + zone_selected
-                        client_socket.send(msg.encode())
+                        if not user.get_rol() == 'operator':
+                            private_room.add_new_room(
+                                user.get_user_name(), client_socket, user.get_rol(), user.get_zone(),
+                                zone_selected['name'], zone_selected['socket'], zone_selected['rol'],
+                                zone_selected['zone']
+                            )
+                        else:
+                            private_room.add_new_room(
+                                zone_selected['name'], zone_selected['socket'], zone_selected['rol'],
+                                zone_selected['zone'],
+                                user.get_user_name(), client_socket, user.get_rol(), user.get_zone()
+                            )
 
-                        message = input('Message >> ')
-                        client_socket.send(message.encode())
+                        msg1 = Package.private_chat.value + split_msg + \
+                               'Chat started ' + split_msg + \
+                               user.get_user_name() + split_msg + \
+                               zone_selected['rol']
+                        zone_selected['socket'].send(msg1.encode())
+
+                        msg2 = Package.private_chat.value + split_msg + \
+                               'Chat started ' + split_msg + \
+                               zone_selected['name'] + split_msg + \
+                               user.get_rol()
+                        client_socket.send(msg2.encode())
+
+                        sockets.append(zone_selected['socket'])
+                        sockets.append(client_socket)
+
+                        for i in sockets:
+                            i.setblocking(False)
 
                         while True:
-                            incoming_data = (client_socket.recv(1024).decode())
-                            if not incoming_data == '/exit':
+                            for i in sockets:
+                                try:
+                                    response = i.recv(4096).decode().split(split_msg)
+                                    if len(response) > 0:
+                                        private_room.set_messages(response)
+                                except:
+                                    pass
 
-                                print(f'{user_responding} >> ' + incoming_data)
-                                message = input('Message >> ')
+                            for _ in private_room.get_messages():
+                                username_message = private_room.get_next_msg()
 
-                                if not message == '/exit':
-                                    client_socket.send(message.encode())
-                                else:
-                                    client_socket.send(WriteOutgoingData.conversation_ended(client_address).encode())
-                                    client_socket.close()
-                                    break
-                            else:
-                                client_socket.send(WriteOutgoingData.conversation_ended(client_address).encode())
-                                client_socket.close()
-                                break
+                                name_user = username_message[0]
+                                message = username_message[1]
+
+                                for user in private_room.get_rooms():
+                                    if user['client_name'] == name_user or user['operator_name'] == name_user:
+                                        if message == '/exit':
+                                            private_room.delete_room(user['client_name'], user['operator_name'])
+                                            sockets.remove(user['client_socket'])
+                                            sockets.remove(user['operator_socket'])
+
+                                            user['client_socket'].send(message.encode())
+                                            user['client_socket'].close()
+                                            user['operator_socket'].send(message.encode())
+                                            user['operator_socket'].close()
+
+                                            print(f"Client: {user['client_name']} Disconected...")
+                                            print(f"Operator: {user['operator_name']} Disconected...")
+                                            logging.warning('CLIENT DISCONECTED ' + user['client_name'])
+                                            logging.warning('OPERATOR  DISCONECTED: ' + user['operator_name'])
+                                        else:
+                                            if user['client_name'] == name_user:
+                                                user['client_socket'].send(message.encode())
+
+                                            elif user['operator_name'] == name_user:
+                                                user['operator_socket'].send(message.encode())
+
+
+
                     else:
+                        users_in_zone = []
+                        for i in zone_selected:
+                            users_in_zone.append(i['name'])
+
                         client_socket.send(WriteOutgoingData.user_logged_menu(
                             incoming_data[1],
                             user.get_rol(),
                             incoming_data[3],
-                            zone_selected
+                            users_in_zone
                         ).encode())
 
                 else:
@@ -165,19 +222,6 @@ class WriteOutgoingData:
         return output_data
 
     @staticmethod
-    def conversation_ended(client_address):
-        """
-        Function that returns the message conversation ended.
-
-        :param client_address: tuple(string, int)
-        :return:
-            type: string
-        """
-
-        print('Client', client_address, 'disconnected')
-        return 'The conversation is over!, See you later!'
-
-    @staticmethod
     def initial_msg():
         """
         Function that returns a welcome message to the server.
@@ -204,7 +248,7 @@ class WriteOutgoingData:
             return Package.validation_register_login.value + split_msg + 'Failed to load a user or existing user if you are registering.'
 
     @staticmethod
-    def zone_rol(username, zone, rol):
+    def zone_rol(socket, username, zone, rol):
         """
         Function in charge of adding the user to the corresponding waiting list.
 
@@ -221,26 +265,28 @@ class WriteOutgoingData:
         list_zones = ('technique', 'administrative', 'sales')
         list_roles = ('client', 'operator')
 
+        user_append = ({'socket': socket, 'name': username, 'rol': rol, 'zone': zone})
+
         if rol == list_roles[0]:
             if zone == list_zones[0]:
                 if Function.user_check_in_zone(zone_technique.get_all_operators_technique()):
                     return zone_technique.get_operator_technique(), True
                 else:
-                    zone_technique.set_client_technique(username)
+                    zone_technique.set_client_technique(user_append)
                     return zone_technique.get_all_clients_technique(), False
 
             elif zone == list_zones[1]:
                 if Function.user_check_in_zone(zone_administrative.get_all_operators_administrative()):
                     return zone_administrative.get_operator_administrative(), True
                 else:
-                    zone_administrative.set_client_administrative(username)
+                    zone_administrative.set_client_administrative(user_append)
                     return zone_administrative.get_all_clients_administrative(), False
 
             elif zone == list_zones[2]:
                 if Function.user_check_in_zone(zone_sales.get_all_operators_sales()):
                     return zone_sales.get_operator_sales(), True
                 else:
-                    zone_sales.set_client_sales(username)
+                    zone_sales.set_client_sales(user_append)
                     return zone_sales.get_all_clients_sales(), False
 
         elif rol == list_roles[1]:
@@ -248,21 +294,21 @@ class WriteOutgoingData:
                 if Function.user_check_in_zone(zone_technique.get_all_clients_technique()):
                     return zone_technique.get_client_technique(), True
                 else:
-                    zone_technique.set_operator_technique(username)
+                    zone_technique.set_operator_technique(user_append)
                     return zone_technique.get_all_operators_technique(), False
 
             elif zone == list_zones[1]:
                 if Function.user_check_in_zone(zone_administrative.get_all_clients_administrative()):
                     return zone_administrative.get_client_administrative(), True
                 else:
-                    zone_administrative.set_operator_administrative(username)
+                    zone_administrative.set_operator_administrative(user_append)
                     return zone_administrative.get_all_operators_administrative(), False
 
             elif zone == list_zones[2]:
                 if Function.user_check_in_zone(zone_sales.get_all_clients_sales()):
                     return zone_sales.get_client_sales(), True
                 else:
-                    zone_sales.set_operator_sales(username)
+                    zone_sales.set_operator_sales(user_append)
                     return zone_sales.get_all_operators_sales(), False
 
     @staticmethod

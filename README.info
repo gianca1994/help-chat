@@ -1,6 +1,7 @@
 - Decisiones:
 
 1. Se saco el parametro "-r o --rol" en el get-opt, porque se agrego como rango del usuario en la base de datos.
+1,5. Se agrego sistema de logs, al iniciar el servidor, al recibir una conexion, al registrar un nuevo usuario y al iniciar sesion.
 
 2. El protocolo.py consta de:
   a. Una constante llamada "split_msg" el cual contiene un string de digitos. (ciente == servidor)
