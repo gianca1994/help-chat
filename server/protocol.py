@@ -111,20 +111,29 @@ def protocol_tcp(client_socket, client_address):
                         sockets.append(zone_selected['socket'])
                         sockets.append(client_socket)
 
+                        for i in sockets:
+                            i.setblocking(False)
+
                         while True:
                             for i in sockets:
                                 try:
-                                    i.setblocking(False)
-                                    msg_users = i.recv(4096).decode()
-
-                                    if len(msg_users) > 0:
-                                        for user in private_room.get_rooms():
-                                            if user['client_socket'] == i:
-                                                user['operator_socket'].send(msg_users.encode())
-                                            elif user['operator_socket'] == i:
-                                                user['client_socket'].send(msg_users.encode())
+                                    # i.setblocking(False)
+                                    private_room.set_messages(i.recv(4096).decode().split(split_msg))
+                                    print(private_room.get_messages())
                                 except:
                                     pass
+
+                            for _ in range(len(private_room.get_messages())):
+                                username_message = private_room.get_next_msg()
+                                name_user = username_message[0]
+                                message = username_message[1]
+
+                                for user in private_room.get_rooms():
+                                    if user['client_name'] == name_user:
+                                        user['client_socket'].send(message.encode())
+                                    elif user['operator_name'] == name_user:
+                                        user['operator_socket'].send(message.encode())
+
 
                                 """
                                 for i in private_room.get_rooms():

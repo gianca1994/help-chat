@@ -70,7 +70,8 @@ def protocol_tcp(client_socket, zone):
 
             if incoming_data[2] == 'operator':
                 message = input('Message >> ')
-                client_socket.send(message.encode())
+                final_msg = user_responding + split_msg + message
+                client_socket.send(final_msg.encode())
 
             while True:
                 incoming_data = client_socket.recv(4096).decode()
@@ -82,7 +83,8 @@ def protocol_tcp(client_socket, zone):
                         print(f'{user_responding}: ' + incoming_data)
 
                         message = input('Message >> ')
-                        client_socket.send(message.encode())
+                        final_msg = user_responding + split_msg + message
+                        client_socket.send(final_msg.encode())
 
 
 class HandleIncomingData:
