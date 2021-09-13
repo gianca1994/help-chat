@@ -73,6 +73,8 @@ def protocol_tcp(client_socket, zone):
                 message = input('Message >> ')
                 final_msg = user_responding + split_msg + message
                 client_socket.send(final_msg.encode())
+            else:
+                print(f'You are currently connected to the operator: {user_responding}, when he starts the chat, you will be able to type. Please wait...')
 
             while True:
                 incoming_data = client_socket.recv(4096).decode()

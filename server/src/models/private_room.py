@@ -22,7 +22,7 @@ class PrivateRoom:
 
     def delete_room(self, client_name, operator_name):
         for i in self.rooms:
-            if i['operator_name'] == client_name and i['operator_name'] == operator_name:
+            if i['client_name'] == client_name and i['operator_name'] == operator_name:
                 self.rooms.remove(i)
 
     def get_messages(self):

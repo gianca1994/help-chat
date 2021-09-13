@@ -89,11 +89,13 @@ def protocol_tcp(client_socket, client_address):
                         if not user.get_rol() == 'operator':
                             private_room.add_new_room(
                                 user.get_user_name(), client_socket, user.get_rol(), user.get_zone(),
-                                zone_selected['name'], zone_selected['socket'], zone_selected['rol'], zone_selected['zone']
+                                zone_selected['name'], zone_selected['socket'], zone_selected['rol'],
+                                zone_selected['zone']
                             )
                         else:
                             private_room.add_new_room(
-                                zone_selected['name'], zone_selected['socket'], zone_selected['rol'], zone_selected['zone'],
+                                zone_selected['name'], zone_selected['socket'], zone_selected['rol'],
+                                zone_selected['zone'],
                                 user.get_user_name(), client_socket, user.get_rol(), user.get_zone()
                             )
 
@@ -124,29 +126,34 @@ def protocol_tcp(client_socket, client_address):
                                 except:
                                     pass
 
-                            for _ in range(len(private_room.get_messages())):
+                            for _ in private_room.get_messages():
                                 username_message = private_room.get_next_msg()
+
                                 name_user = username_message[0]
                                 message = username_message[1]
 
                                 for user in private_room.get_rooms():
-                                    if message == '/exit':
-                                        user['client_socket'].send(message.encode())
-                                        user['client_socket'].close()
-                                        user['operator_socket'].send(message.encode())
-                                        user['operator_socket'].close()
-                                        print(f"Client: {user['client_name']} Disconected...")
-                                        print(f"Operator: {user['operator_name']} Disconected...")
+                                    if user['client_name'] == name_user or user['operator_name'] == name_user:
+                                        if message == '/exit':
+                                            private_room.delete_room(user['client_name'], user['operator_name'])
+                                            sockets.remove(user['client_socket'])
+                                            sockets.remove(user['operator_socket'])
 
-                                        logging.warning('CLIENT DISCONECTED ' + user['client_name'])
-                                        logging.warning('OPERATOR  DISCONECTED: ' + user['operator_name'])
-
-                                    else:
-                                        if user['client_name'] == name_user:
                                             user['client_socket'].send(message.encode())
-
-                                        elif user['operator_name'] == name_user:
+                                            user['client_socket'].close()
                                             user['operator_socket'].send(message.encode())
+                                            user['operator_socket'].close()
+
+                                            print(f"Client: {user['client_name']} Disconected...")
+                                            print(f"Operator: {user['operator_name']} Disconected...")
+                                            logging.warning('CLIENT DISCONECTED ' + user['client_name'])
+                                            logging.warning('OPERATOR  DISCONECTED: ' + user['operator_name'])
+                                        else:
+                                            if user['client_name'] == name_user:
+                                                user['client_socket'].send(message.encode())
+
+                                            elif user['operator_name'] == name_user:
+                                                user['operator_socket'].send(message.encode())
 
 
 
@@ -213,7 +220,6 @@ class WriteOutgoingData:
         print('Client', client_address, 'disconnected')
         output_data = Package.exit.value + split_msg + 'Registration completed or login failed! start again!!, See you later!'
         return output_data
-
 
     @staticmethod
     def initial_msg():
