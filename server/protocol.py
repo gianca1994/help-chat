@@ -120,9 +120,13 @@ def protocol_tcp(client_socket, client_address):
                         while True:
                             for i in sockets:
                                 try:
-                                    response = i.recv(4096).decode().split(split_msg)
-                                    if len(response) > 0:
-                                        private_room.set_messages(response)
+                                    received = i.recv(4096).decode()
+                                    if received == b"":
+                                        i.close()
+                                    else:
+                                        response = received.split(split_msg)
+                                        if len(response) > 0:
+                                            private_room.set_messages(response)
                                 except:
                                     pass
 
