@@ -3,7 +3,7 @@ import os
 from time import sleep
 
 split_msg = '!¡"?#=$)%(&/'
-msg_exit = 'The conversation is over!, See you later!'
+msg_exit = '/exit'
 
 
 class Package(enum.Enum):
@@ -66,9 +66,10 @@ def protocol_tcp(client_socket, zone):
         elif data == Package.private_chat.value:
             os.system('clear')
             user_responding = incoming_data[1]
+            is_operator = incoming_data[2]
             print(incoming_data[0] + user_responding)
 
-            if incoming_data[2] == 'operator':
+            if is_operator == 'operator':
                 message = input('Message >> ')
                 final_msg = user_responding + split_msg + message
                 client_socket.send(final_msg.encode())

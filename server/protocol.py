@@ -1,4 +1,5 @@
 import enum
+import logging
 from time import sleep
 
 from src.db.crud_db import register_user, login_user
@@ -87,13 +88,13 @@ def protocol_tcp(client_socket, client_address):
                     if private_chat:
                         if not user.get_rol() == 'operator':
                             private_room.add_new_room(
-                                user.get_user_name(), client_socket, user.get_rol(),
-                                zone_selected['name'], zone_selected['socket'], zone_selected['rol']
+                                user.get_user_name(), client_socket, user.get_rol(), user.get_zone(),
+                                zone_selected['name'], zone_selected['socket'], zone_selected['rol'], zone_selected['zone']
                             )
                         else:
                             private_room.add_new_room(
-                                zone_selected['name'], zone_selected['socket'], zone_selected['rol'],
-                                user.get_user_name(), client_socket, user.get_rol()
+                                zone_selected['name'], zone_selected['socket'], zone_selected['rol'], zone_selected['zone'],
+                                user.get_user_name(), client_socket, user.get_rol(), user.get_zone()
                             )
 
                         msg1 = Package.private_chat.value + split_msg + \
@@ -117,9 +118,9 @@ def protocol_tcp(client_socket, client_address):
                         while True:
                             for i in sockets:
                                 try:
-                                    # i.setblocking(False)
-                                    private_room.set_messages(i.recv(4096).decode().split(split_msg))
-                                    print(private_room.get_messages())
+                                    response = i.recv(4096).decode().split(split_msg)
+                                    if len(response) > 0:
+                                        private_room.set_messages(response)
                                 except:
                                     pass
 
@@ -129,59 +130,36 @@ def protocol_tcp(client_socket, client_address):
                                 message = username_message[1]
 
                                 for user in private_room.get_rooms():
-                                    if user['client_name'] == name_user:
+                                    if message == '/exit':
                                         user['client_socket'].send(message.encode())
-                                    elif user['operator_name'] == name_user:
+                                        user['client_socket'].close()
                                         user['operator_socket'].send(message.encode())
+                                        user['operator_socket'].close()
+                                        print(f"Client: {user['client_name']} Disconected...")
+                                        print(f"Operator: {user['operator_name']} Disconected...")
 
+                                        logging.warning('CLIENT DISCONECTED ' + user['client_name'])
+                                        logging.warning('OPERATOR  DISCONECTED: ' + user['operator_name'])
 
-                                """
-                                for i in private_room.get_rooms():
-                                incoming_data = i['client_socket'].recv(1024).decode().split(split_msg)
-                                if len(incoming_data) > 0:
-                                    i['operator_socket'].send(incoming_data[1])
-                                    break
-
-                                incoming_data = i['operator_socket'].recv(1024).decode().split(split_msg)
-                                if len(incoming_data) > 0:
-                                    i['client_socket'].send(incoming_data[1])
-                                    break
-                                """
-
-                            """
-                            if not incoming_data == '':
-                                user_to_send = incoming_data[0]
-                                message = incoming_data[1]
-
-                                for i in private_room.get_rooms():
-                                    if i['client_name'] == user_to_send:
-                                        i['client_socket'].send(message)
-                                        break
                                     else:
-                                        i['operator_socket'].send(message)
-                                        break
+                                        if user['client_name'] == name_user:
+                                            user['client_socket'].send(message.encode())
 
-                            for i in users_private_chat:
-                                socket_received = i['socket']
-                                incoming_data = socket_received.recv(1024).decode()
+                                        elif user['operator_name'] == name_user:
+                                            user['operator_socket'].send(message.encode())
 
-                                if not incoming_data == '':
-                                    if not incoming_data == '/exit':
-                                        for users in users_private_chat:
-                                            if not users['socket'] == socket_received:
-                                                users['socket'].send(incoming_data.encode())
-                                    else:
-                                        client_socket.send(
-                                            WriteOutgoingData.conversation_ended(client_address).encode())
-                                        client_socket.close()
-                                        break
-                            """
+
+
                     else:
+                        users_in_zone = []
+                        for i in zone_selected:
+                            users_in_zone.append(i['name'])
+
                         client_socket.send(WriteOutgoingData.user_logged_menu(
                             incoming_data[1],
                             user.get_rol(),
                             incoming_data[3],
-                            zone_selected
+                            users_in_zone
                         ).encode())
 
                 else:
@@ -236,18 +214,6 @@ class WriteOutgoingData:
         output_data = Package.exit.value + split_msg + 'Registration completed or login failed! start again!!, See you later!'
         return output_data
 
-    @staticmethod
-    def conversation_ended(client_address):
-        """
-        Function that returns the message conversation ended.
-
-        :param client_address: tuple(string, int)
-        :return:
-            type: string
-        """
-
-        print('Client', client_address, 'disconnected')
-        return 'The conversation is over!, See you later!'
 
     @staticmethod
     def initial_msg():
@@ -293,7 +259,7 @@ class WriteOutgoingData:
         list_zones = ('technique', 'administrative', 'sales')
         list_roles = ('client', 'operator')
 
-        user_append = ({'socket': socket, 'name': username, 'rol': rol})
+        user_append = ({'socket': socket, 'name': username, 'rol': rol, 'zone': zone})
 
         if rol == list_roles[0]:
             if zone == list_zones[0]:
