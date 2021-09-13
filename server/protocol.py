@@ -51,7 +51,6 @@ def protocol_tcp(client_socket, client_address):
         none
     """
     try:
-        sockets.append(client_socket)
         client_socket.send(WriteOutgoingData.initial_msg().encode())
 
         while True:
@@ -100,23 +99,32 @@ def protocol_tcp(client_socket, client_address):
                         msg1 = Package.private_chat.value + split_msg + \
                                'Chat started ' + split_msg + \
                                user.get_user_name() + split_msg + \
-                               zone_selected['rol'] + split_msg + \
-                               str(client_socket)
+                               zone_selected['rol']
                         zone_selected['socket'].send(msg1.encode())
 
                         msg2 = Package.private_chat.value + split_msg + \
                                'Chat started ' + split_msg + \
                                zone_selected['name'] + split_msg + \
-                               user.get_rol() + split_msg + \
-                               str(zone_selected['socket'])
+                               user.get_rol()
                         client_socket.send(msg2.encode())
+
+                        sockets.append(zone_selected['socket'])
+                        sockets.append(client_socket)
 
                         while True:
                             for i in sockets:
-                                incoming_data = i.recv(4096).decode().split(split_msg)
+                                try:
+                                    i.setblocking(False)
+                                    msg_users = i.recv(4096).decode()
 
-                                if incoming_data > 0:
-                                    incoming_data[0].send(incoming_data[1])
+                                    if len(msg_users) > 0:
+                                        for user in private_room.get_rooms():
+                                            if user['client_socket'] == i:
+                                                user['operator_socket'].send(msg_users.encode())
+                                            elif user['operator_socket'] == i:
+                                                user['client_socket'].send(msg_users.encode())
+                                except:
+                                    pass
 
                                 """
                                 for i in private_room.get_rooms():
