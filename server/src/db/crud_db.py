@@ -3,6 +3,8 @@ from sqlite3.dbapi2 import connect
 from werkzeug.security import check_password_hash, generate_password_hash
 import logging
 
+from utilities.constants import Logger, CrudDB
+
 
 def encrypt_password(password):
     """
@@ -43,11 +45,11 @@ def check_user_existence(username):
         type: boolean
     """
 
-    conn = connect(database="DataBase.db")
+    conn = connect(database=CrudDB.DATABASE)
     user_exist = False
     try:
         cur = conn.cursor()
-        cur.execute("SELECT * FROM users")
+        cur.execute(CrudDB.SELECT_ALL_USER)
         for i in cur.fetchall():
             if i[1] == username:
                 user_exist = True
@@ -67,16 +69,15 @@ def register_user(username, password):
         type: boolean
     """
 
-    conn = connect(database="DataBase.db")
+    conn = connect(database=CrudDB.DATABASE)
     user_register = False
     try:
         cur = conn.cursor()
         password_encrypted = encrypt_password(password)
         if not check_user_existence(username=username):
-            cur.execute("INSERT INTO users (user_name, password, operator) "
-                        f"VALUES ('{username}', '{password_encrypted}', False)")
+            cur.execute(f'{CrudDB.INSERT_USER} VALUES ("{username}", "{password_encrypted}", False)')
             conn.commit()
-            logging.warning('<< REGISTER >> ' + ' USERNAME: ' + username + ' - ' + 'ROL: client')
+            logging.warning(f'{Logger.REGISTER} {username} {Logger.REGISTER_ROL}')
             user_register = True
         return user_register
     except sqlite3.OperationalError as error:
@@ -94,21 +95,21 @@ def login_user(username, password):
         type: tuple(boolean, boolean)
     """
 
-    conn = connect(database="DataBase.db")
+    conn = connect(database=CrudDB.DATABASE)
     validate_user = False
     is_operator = False
 
     try:
         cur = conn.cursor()
-        cur.execute("SELECT * FROM users")
+        cur.execute(CrudDB.SELECT_ALL_USER)
         for i in cur.fetchall():
             if i[1] == username:
                 if validate_password(i[2], password):
                     if i[3]:
                         is_operator = True
-                        logging.warning('<< LOGIN >> ' + ' USERNAME: ' + username + ' - ' + 'ROL: operator')
+                        logging.warning(f'{Logger.LOGIN} {username} {Logger.LOGIN_ROL_OPERATOR}')
                     else:
-                        logging.warning('<< LOGIN >> ' + ' USERNAME: ' + username + ' - ' + 'ROL: client')
+                        logging.warning(f'{Logger.LOGIN} {username} {Logger.LOGIN_ROL_CLIENT}')
                     validate_user = True
         return validate_user, is_operator
     except sqlite3.OperationalError as error:

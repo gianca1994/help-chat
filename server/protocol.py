@@ -6,7 +6,7 @@ from src.db.crud_db import register_user, login_user
 from src.models.private_room import PrivateRoom
 from src.models.user import UserData
 from src.models.zone import ZoneTechnique, ZoneAdministrative, ZoneSales
-from utilities.constants import Setting, Rol, Zone, Message
+from utilities.constants import Setting, Rol, Zone, Message, Logger
 
 private_room = PrivateRoom()
 sockets = []
@@ -119,13 +119,9 @@ def protocol_tcp(client_socket, client_address):
                         while True:
                             for i in sockets:
                                 try:
-                                    received = i.recv(Setting.BUFFER_SIZE).decode()
-                                    if received == b"":
-                                        i.close()
-                                    else:
-                                        response = received.split(Setting.SPLIT)
-                                        if len(response) > 0:
-                                            private_room.set_messages(response)
+                                    response = i.recv(Setting.BUFFER_SIZE).decode().split(Setting.SPLIT)
+                                    if len(response) > 0:
+                                        private_room.set_messages(response)
                                 except:
                                     pass
 
@@ -137,8 +133,10 @@ def protocol_tcp(client_socket, client_address):
 
                                 for user in private_room.get_rooms():
                                     if user['client_name'] == name_user or user['operator_name'] == name_user:
-                                        if message == '/exit':
+                                        if message == Setting.EXIT_COMMAND:
+
                                             private_room.delete_room(user['client_name'], user['operator_name'])
+
                                             sockets.remove(user['client_socket'])
                                             sockets.remove(user['operator_socket'])
 
@@ -147,10 +145,8 @@ def protocol_tcp(client_socket, client_address):
                                             user['operator_socket'].send(message.encode())
                                             user['operator_socket'].close()
 
-                                            print(f"Client: {user['client_name']} Disconected...")
-                                            print(f"Operator: {user['operator_name']} Disconected...")
-                                            logging.warning('CLIENT DISCONECTED ' + user['client_name'])
-                                            logging.warning('OPERATOR  DISCONECTED: ' + user['operator_name'])
+                                            logging.warning(f'{Logger.DISCONNECTED} {user["client_name"]}')
+                                            logging.warning(f'{Logger.DISCONNECTED} {user["operator_name"]}')
                                         else:
                                             if user['client_name'] == name_user:
                                                 user['client_socket'].send(message.encode())

@@ -7,6 +7,7 @@ import sys
 import logging
 
 from protocol import protocol_tcp
+from utilities.constants import Logger, ServerMSG
 from utilities.check_db_existence import check_existence_db
 
 host_address = socket.gethostbyname(socket.getfqdn())
@@ -24,8 +25,7 @@ def option_reading():
     (opt, arg) = getopt.getopt(sys.argv[1:], 'p:', ['port='])
 
     if len(opt) != 1:
-        print(
-            "Error: expected 1 option [-p] or [--port] ", len(opt), " received")
+        print(f'{ServerMSG.EXPECTED_OPT}, {len(opt)} received')
         sys.exit(0)
 
     for (op, arg) in opt:
@@ -34,10 +34,10 @@ def option_reading():
             if int(arg) > 1000:
                 port = int(arg)
             else:
-                print(f'\nThe port entered is reserved, enter another port...')
+                print(f'\n{ServerMSG.PORT_RESERVED}')
                 sys.exit(0)
         else:
-            print('Only the -p or --port commands are allowed')
+            print(ServerMSG.FAILED_COMMAND)
             sys.exit(0)
 
     assert port is not None
@@ -58,24 +58,23 @@ def main():
         none
     """
     check_existence_db()
-    logging.basicConfig(filename="server.log", encoding='utf-8', format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(filename=Logger.FILE_NAME, encoding=Logger.ENCODING, format=Logger.FORMAT)
 
     port = option_reading()
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(('', port))
 
-    print(
-        f"Server turned on with address: {host_address} and the port: {port}. STATUS: Ready to interact")
+    print(f"{ServerMSG.ONLINE} {host_address}:{port}")
 
-    logging.warning('SERVER STARTED ON IP: ' + host_address + ', ' + 'IN THE PORT: ' + str(port))
+    logging.warning(f'{Logger.MSG_SERVER_ONLINE} {host_address}:{str(port)}')
 
     while True:
         server_socket.listen()
 
         client_socket, client_address = server_socket.accept()
-        print(f'\nGot a connection from: {client_address}')
-        logging.warning('ACCEPTED CONNECTION OF THE IP ADDRESS: ' + client_address[0])
+        print(f'\n{ServerMSG.CONNECTION_ACCEPTED} {client_address}')
+        logging.warning(f'{Logger.MSG_ACCEPTED_CONNECTION} {client_address[0]}')
 
         multithreading = threading.Thread(target=protocol_tcp, args=(client_socket, client_address))
         multithreading.start()
@@ -87,8 +86,8 @@ if __name__ == '__main__':
     except getopt.GetoptError as error:
         print(error)
     except ConnectionRefusedError:
-        print('Error: Connection refused')
+        print(ServerMSG.CONNECTION_REFUSED)
     except socket.error:
-        print('Failed to create a socket')
+        print(ServerMSG.FAILED_SOCKET_CREATE)
     except Exception as error:
         print(error)

@@ -70,7 +70,10 @@ def protocol_tcp(client_socket, zone):
             print(incoming_data[0] + user_responding)
 
             if is_operator == 'operator':
-                message = input('Message >> ')
+                while True:
+                    message = input('Message >> ')
+                    if not message == '':
+                        break
                 final_msg = user_responding + split_msg + message
                 client_socket.send(final_msg.encode())
             else:
@@ -85,7 +88,10 @@ def protocol_tcp(client_socket, zone):
                     else:
                         print(f'{user_responding}: ' + incoming_data)
 
-                        message = input('Message >> ')
+                        while True:
+                            message = input('Message >> ')
+                            if not message == '':
+                                break
                         final_msg = user_responding + split_msg + message
                         client_socket.send(final_msg.encode())
 
