@@ -6,11 +6,10 @@ from src.db.crud_db import register_user, login_user
 from src.models.private_room import PrivateRoom
 from src.models.user import UserData
 from src.models.zone import ZoneTechnique, ZoneAdministrative, ZoneSales
+from utilities.constants import Setting, Rol, Zone, Message
 
 private_room = PrivateRoom()
 sockets = []
-
-split_msg = '!¡"?#=$)%(&/'
 
 zone_technique = ZoneTechnique()
 zone_administrative = ZoneAdministrative()
@@ -36,12 +35,12 @@ def protocol_tcp(client_socket, client_address):
     server and the client, as well as performing the necessary operations
     with the incoming information.
 
-    When a packet arrives, it comes as a string, .split(split_msg) is applied,
-    split_msg: is a string that is added to the message string where the packet
+    When a packet arrives, it comes as a string, .split(Setting.SPLIT) is applied,
+    Setting.SPLIT: is a string that is added to the message string where the packet
     will be cut, for example:
 
-    Packet = "packet_name" + split_msg + "message sent".
-    Packet.split(split_msg) = ["packet_name", "message sent"].
+    Packet = "packet_name" + Setting.SPLIT + "message sent".
+    Packet.split(Setting.SPLIT) = ["packet_name", "message sent"].
 
     Then we extract the first index of that packet and use it to check which option
     we want to execute.
@@ -56,7 +55,7 @@ def protocol_tcp(client_socket, client_address):
 
         while True:
 
-            incoming_data = (client_socket.recv(4096).decode()).split(split_msg)
+            incoming_data = (client_socket.recv(Setting.BUFFER_SIZE).decode()).split(Setting.SPLIT)
             data = incoming_data.pop(0)
 
             if data == Package.exit.value:
@@ -76,7 +75,7 @@ def protocol_tcp(client_socket, client_address):
                         zone=incoming_data[3]
                     )
 
-                    user.set_rol('client') if not register_login_valid[1] else user.set_rol('operator')
+                    user.set_rol(Rol.CLIENT) if not register_login_valid[1] else user.set_rol(Rol.OPERATOR)
 
                     zone_selected, private_chat = WriteOutgoingData.zone_rol(
                         client_socket,
@@ -86,7 +85,7 @@ def protocol_tcp(client_socket, client_address):
                     )
 
                     if private_chat:
-                        if not user.get_rol() == 'operator':
+                        if not user.get_rol() == Rol.OPERATOR:
                             private_room.add_new_room(
                                 user.get_user_name(), client_socket, user.get_rol(), user.get_zone(),
                                 zone_selected['name'], zone_selected['socket'], zone_selected['rol'],
@@ -99,15 +98,15 @@ def protocol_tcp(client_socket, client_address):
                                 user.get_user_name(), client_socket, user.get_rol(), user.get_zone()
                             )
 
-                        msg1 = Package.private_chat.value + split_msg + \
-                               'Chat started ' + split_msg + \
-                               user.get_user_name() + split_msg + \
+                        msg1 = Package.private_chat.value + Setting.SPLIT + \
+                               Message.CHAT_START + Setting.SPLIT + \
+                               user.get_user_name() + Setting.SPLIT + \
                                zone_selected['rol']
                         zone_selected['socket'].send(msg1.encode())
 
-                        msg2 = Package.private_chat.value + split_msg + \
-                               'Chat started ' + split_msg + \
-                               zone_selected['name'] + split_msg + \
+                        msg2 = Package.private_chat.value + Setting.SPLIT + \
+                               Message.CHAT_START + Setting.SPLIT + \
+                               zone_selected['name'] + Setting.SPLIT + \
                                user.get_rol()
                         client_socket.send(msg2.encode())
 
@@ -120,11 +119,11 @@ def protocol_tcp(client_socket, client_address):
                         while True:
                             for i in sockets:
                                 try:
-                                    received = i.recv(4096).decode()
+                                    received = i.recv(Setting.BUFFER_SIZE).decode()
                                     if received == b"":
                                         i.close()
                                     else:
-                                        response = received.split(split_msg)
+                                        response = received.split(Setting.SPLIT)
                                         if len(response) > 0:
                                             private_room.set_messages(response)
                                 except:
@@ -221,8 +220,8 @@ class WriteOutgoingData:
             type: string
         """
 
-        print('Client', client_address, 'disconnected')
-        output_data = Package.exit.value + split_msg + 'Registration completed or login failed! start again!!, See you later!'
+        print(Rol.CLIENT, client_address, Message.DISCONNECTED)
+        output_data = Package.exit.value + Setting.SPLIT + Message.REGISTRATION_OR_LOGIN_FAILURE
         return output_data
 
     @staticmethod
@@ -234,7 +233,7 @@ class WriteOutgoingData:
             type: string
         """
 
-        output_data = Package.initial_msg.value + split_msg + 'Welcome to Help Chat (v0.1)!'
+        output_data = Package.initial_msg.value + Setting.SPLIT + Message.WELCOME
         return output_data
 
     @staticmethod
@@ -247,9 +246,9 @@ class WriteOutgoingData:
             type: string
         """
         if validation:
-            return Package.validation_register_login.value + split_msg + 'User loaded successfully.'
+            return Package.validation_register_login.value + Setting.SPLIT + Message.LOGGED_USER
         else:
-            return Package.validation_register_login.value + split_msg + 'Failed to load a user or existing user if you are registering.'
+            return Package.validation_register_login.value + Setting.SPLIT + Message.FAILED_LOGIN
 
     @staticmethod
     def zone_rol(socket, username, zone, rol):
@@ -266,8 +265,8 @@ class WriteOutgoingData:
                 tuple(list[all_users_in_zone], False)
         """
 
-        list_zones = ('technique', 'administrative', 'sales')
-        list_roles = ('client', 'operator')
+        list_zones = (Zone.TECHNIQUE, Zone.ADMINISTRATIVE, Zone.SALES)
+        list_roles = (Rol.CLIENT, Rol.OPERATOR)
 
         user_append = ({'socket': socket, 'name': username, 'rol': rol, 'zone': zone})
 
@@ -327,11 +326,11 @@ class WriteOutgoingData:
         :return:
             type: string
         """
-        return Package.user_logged_menu.value + split_msg + \
-               f'Welcome {username} to the help chat system...' + split_msg + \
-               f'The role of your account is: {rol}' + split_msg + \
-               'You are currently in a waiting queue, you will enter a room as soon as you are assigned a client or operator...' + split_msg + \
-               f'{rol} in the area: {zone_selected}, in the queue: {users_in_zone}' + split_msg + \
+        return Package.user_logged_menu.value + Setting.SPLIT + \
+               f'Welcome {username} to the help chat system...' + Setting.SPLIT + \
+               f'The role of your account is: {rol}' + Setting.SPLIT + \
+               'You are currently in a waiting queue, you will enter a room as soon as you are assigned a client or operator...' + Setting.SPLIT + \
+               f'{rol} in the area: {zone_selected}, in the queue: {users_in_zone}' + Setting.SPLIT + \
                'As soon as an operator is available, he will go to a chat room'
 
 
