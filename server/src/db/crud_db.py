@@ -3,7 +3,7 @@ from sqlite3.dbapi2 import connect
 from werkzeug.security import check_password_hash, generate_password_hash
 import logging
 
-from utilities.constants import Logger, CrudDB
+from utilities.constants import Logger, CrudDB, Online
 
 
 def encrypt_password(password):
@@ -103,7 +103,7 @@ def login_user(username, password):
         cur = conn.cursor()
         cur.execute(CrudDB.SELECT_ALL_USER)
         for i in cur.fetchall():
-            if i[1] == username:
+            if i[1] == username and username not in Online.USERS:
                 if validate_password(i[2], password):
                     if i[3]:
                         is_operator = True
@@ -111,11 +111,8 @@ def login_user(username, password):
                     else:
                         logging.warning(f'{Logger.LOGIN} {username} {Logger.LOGIN_ROL_CLIENT}')
                     validate_user = True
+                    Online.USERS.append(i[1])
         return validate_user, is_operator
     except sqlite3.OperationalError as error:
         print(error)
     conn.close()
-
-
-
-

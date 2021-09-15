@@ -6,10 +6,9 @@ from src.db.crud_db import register_user, login_user
 from src.models.private_room import PrivateRoom
 from src.models.user import UserData
 from src.models.zone import ZoneTechnique, ZoneAdministrative, ZoneSales
-from utilities.constants import Setting, Rol, Zone, Message, Logger
+from utilities.constants import Setting, Rol, Zone, Message, Logger, Online
 
 private_room = PrivateRoom()
-sockets = []
 
 zone_technique = ZoneTechnique()
 zone_administrative = ZoneAdministrative()
@@ -110,14 +109,14 @@ def protocol_tcp(client_socket, client_address):
                                user.get_rol()
                         client_socket.send(msg2.encode())
 
-                        sockets.append(zone_selected['socket'])
-                        sockets.append(client_socket)
+                        Online.SOCKETS.append(zone_selected['socket'])
+                        Online.SOCKETS.append(client_socket)
 
-                        for i in sockets:
+                        for i in Online.SOCKETS:
                             i.setblocking(False)
 
                         while True:
-                            for i in sockets:
+                            for i in Online.SOCKETS:
                                 try:
                                     response = i.recv(Setting.BUFFER_SIZE).decode().split(Setting.SPLIT)
                                     if len(response) > 0:
@@ -137,13 +136,16 @@ def protocol_tcp(client_socket, client_address):
 
                                             private_room.delete_room(user['client_name'], user['operator_name'])
 
-                                            sockets.remove(user['client_socket'])
-                                            sockets.remove(user['operator_socket'])
+                                            Online.SOCKETS.remove(user['client_socket'])
+                                            Online.SOCKETS.remove(user['operator_socket'])
 
                                             user['client_socket'].send(message.encode())
                                             user['client_socket'].close()
                                             user['operator_socket'].send(message.encode())
                                             user['operator_socket'].close()
+
+                                            Online.USERS.remove(user['client_name'])
+                                            Online.USERS.remove(user['operator_name'])
 
                                             logging.warning(f'{Logger.DISCONNECTED} {user["client_name"]}')
                                             logging.warning(f'{Logger.DISCONNECTED} {user["operator_name"]}')

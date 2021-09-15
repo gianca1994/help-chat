@@ -4,6 +4,11 @@ class Setting:
     EXIT_COMMAND = '/exit'
 
 
+class Online:
+    USERS = []
+    SOCKETS = []
+
+
 class Rol:
     CLIENT = 'client'
     OPERATOR = 'operator'
