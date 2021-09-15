@@ -4,6 +4,7 @@ import getopt
 import socket
 import sys
 
+from utilities.constants import ClientMSG, Setting
 from protocol import protocol_tcp
 
 
@@ -17,30 +18,24 @@ def option_reading():
         returns the host and port on which the server is running,
         as well as the zone we want to enter.
     """
-    (opt, arg) = getopt.getopt(sys.argv[1:], 'h:p:z:', [
-        'host=', 'port=', 'zone='])
+    (opt, arg) = getopt.getopt(sys.argv[1:], Setting.SHORT_COMMANDS, Setting.LONG_COMMANDS)
 
     if len(opt) != 3:
-        print(f"""Error: expected 3 options:
-- [-h] or [--host]
-- [-p] or [--port] 
-- [-z] or [--zone]  
-You entered: {len(opt)} options.
-""")
+        print(f'{ClientMSG.EXPECTED_OPT}{len(opt)} options.')
         sys.exit(0)
 
     for (op, arg) in opt:
-        if op in ['-h', '--host']:
+        if op in Setting.HOST_OPT:
             host = str(arg)
 
-        elif op in ['-p', '--port']:
+        elif op in Setting.PORT_OPT:
             port = int(arg)
 
-        elif op in ['-z', '--zone']:
+        elif op in Setting.ZONE_OPT:
             zone = str(arg)
 
         else:
-            print('The option entered is not valid.')
+            print(ClientMSG.FAILED_COMMAND)
 
     assert (host, port, zone) is not None
     return host, port, zone
@@ -62,8 +57,7 @@ def main():
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((host, port))
 
-    print(
-        f'Connected to the Help Chat server at address: {host} and at port: {port}')
+    print(f'{ClientMSG.ONLINE} {host}:{port} \n')
 
     protocol_tcp(client_socket, zone)
 
@@ -74,8 +68,8 @@ if __name__ == '__main__':
     except getopt.GetoptError as error:
         print(error)
     except ConnectionRefusedError:
-        print('Error: Connection refused')
+        print(ClientMSG.CONNECTION_REFUSED)
     except socket.error:
-        print('Failed to create a socket')
+        print(ClientMSG.FAILED_SOCKET_CREATE)
     except Exception as error:
         print(error)
