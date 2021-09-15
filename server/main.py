@@ -10,7 +10,7 @@ from protocol import protocol_tcp
 from utilities.constants import Logger, ServerMSG
 from utilities.check_db_existence import check_existence_db
 
-host_address = socket.gethostbyname(socket.getfqdn())
+host_address = socket.gethostbyname(socket.gethostname())
 
 
 def option_reading():
@@ -63,7 +63,7 @@ def main():
     port = option_reading()
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(('', port))
+    server_socket.bind((host_address, port))
 
     print(f"{ServerMSG.ONLINE} {host_address}:{port}")
 

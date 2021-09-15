@@ -119,8 +119,11 @@ def protocol_tcp(client_socket, client_address):
                             for i in Online.SOCKETS:
                                 try:
                                     response = i.recv(Setting.BUFFER_SIZE).decode().split(Setting.SPLIT)
-                                    if len(response) > 0:
-                                        private_room.set_messages(response)
+                                    if response == ['']:
+                                        Online.SOCKETS.remove(i)
+                                    else:
+                                        if len(response) > 0:
+                                            private_room.set_messages(response)
                                 except:
                                     pass
 
@@ -132,20 +135,24 @@ def protocol_tcp(client_socket, client_address):
 
                                 for user in private_room.get_rooms():
                                     if user['client_name'] == name_user or user['operator_name'] == name_user:
-                                        if message == Setting.EXIT_COMMAND:
+                                        if message.lower() == Setting.EXIT_COMMAND:
 
                                             private_room.delete_room(user['client_name'], user['operator_name'])
 
                                             Online.SOCKETS.remove(user['client_socket'])
                                             Online.SOCKETS.remove(user['operator_socket'])
 
-                                            user['client_socket'].send(message.encode())
+                                            user['client_socket'].send(message.lower().encode())
                                             user['client_socket'].close()
-                                            user['operator_socket'].send(message.encode())
+
+                                            user['operator_socket'].send(message.lower().encode())
                                             user['operator_socket'].close()
 
                                             Online.USERS.remove(user['client_name'])
                                             Online.USERS.remove(user['operator_name'])
+
+                                            print(f'{Logger.DISCONNECTED} {user["client_name"]}')
+                                            print(f'{Logger.DISCONNECTED} {user["operator_name"]}')
 
                                             logging.warning(f'{Logger.DISCONNECTED} {user["client_name"]}')
                                             logging.warning(f'{Logger.DISCONNECTED} {user["operator_name"]}')

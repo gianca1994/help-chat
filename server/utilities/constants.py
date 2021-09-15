@@ -1,6 +1,6 @@
 class Setting:
     SPLIT = '!¡"?#=$)%(&/'
-    BUFFER_SIZE = 4096
+    BUFFER_SIZE = 1024
     EXIT_COMMAND = '/exit'
 
 
