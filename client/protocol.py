@@ -1,9 +1,7 @@
 import enum
 import os
 from time import sleep
-
-split_msg = '!¡"?#=$)%(&/'
-msg_exit = '/exit'
+from utilities.constants import Setting, Rol, Message
 
 
 class Package(enum.Enum):
@@ -24,12 +22,12 @@ def protocol_tcp(client_socket, zone):
     Function responsible for sending and receiving packets
     between the client and the server.
 
-    When a packet arrives, it comes as a string, .split(split_msg) is applied,
-    split_msg: is a string that is added to the message string where the packet
+    When a packet arrives, it comes as a string, .split(Setting.SPLIT) is applied,
+    Setting.SPLIT: is a string that is added to the message string where the packet
     will be cut, for example:
 
-    Packet = "packet_name" + split_msg + "message sent".
-    Packet.split(split_msg) = ["packet_name", "message sent"].
+    Packet = "packet_name" + Setting.SPLIT + "message sent".
+    Packet.split(Setting.SPLIT) = ["packet_name", "message sent"].
 
     Then we extract the first index of that packet and use it to check which option
     we want to execute.
@@ -40,7 +38,7 @@ def protocol_tcp(client_socket, zone):
         none
     """
     while True:
-        incoming_data = (client_socket.recv(4096).decode()).split(split_msg)
+        incoming_data = (client_socket.recv(Setting.BUFFER_SIZE).decode()).split(Setting.SPLIT)
         data = incoming_data.pop(0)
 
         if data == Package.exit.value:
@@ -64,36 +62,25 @@ def protocol_tcp(client_socket, zone):
             )
 
         elif data == Package.private_chat.value:
-            os.system('clear')
+            os.system(Setting.CLEAR)
             user_responding = incoming_data[1]
             is_operator = incoming_data[2]
             print(incoming_data[0] + user_responding)
 
-            if is_operator == 'operator':
-                while True:
-                    message = input('Message >> ')
-                    if not message == '':
-                        break
-                final_msg = user_responding + split_msg + message
-                client_socket.send(final_msg.encode())
+            if is_operator == Rol.OPERATOR:
+                client_socket.send(Function.set_message(user_responding).encode())
             else:
-                print(f'You are currently connected to the operator: {user_responding}, when he starts the chat, you will be able to type. Please wait...')
+                print(Message.CONNECTED_TO_OPERATOR)
 
             while True:
-                incoming_data = client_socket.recv(4096).decode()
+                incoming_data = client_socket.recv(Setting.BUFFER_SIZE).decode()
 
                 if not incoming_data == '':
-                    if incoming_data == msg_exit:
+                    if incoming_data == Setting.EXIT_COMMAND:
                         Function.timer_exit(3)
                     else:
                         print(f'{user_responding}: ' + incoming_data)
-
-                        while True:
-                            message = input('Message >> ')
-                            if not message == '':
-                                break
-                        final_msg = user_responding + split_msg + message
-                        client_socket.send(final_msg.encode())
+                        client_socket.send(Function.set_message(user_responding).encode())
 
 
 class HandleIncomingData:
@@ -121,23 +108,27 @@ class HandleIncomingData:
         :return:
             none
         """
-        os.system('clear')
+        os.system(Setting.CLEAR)
         print(incoming_data)
         for i in range(seconds, 0, -1):
-            print(f'Starting in {i} seconds...')
+            print(f'{Message.STARTING_TIMER} {i}')
             sleep(1)
-        os.system('clear')
+        os.system(Setting.CLEAR)
 
     @staticmethod
     def user_logged_menu(incoming_data_one, rol, incoming_data_two, zone_selected, incoming_data_four):
-        print(incoming_data_one)
-        print(rol)
-        print()
-        print(incoming_data_two)
-        print()
-        print(zone_selected)
-        print()
-        print(incoming_data_four)
+        """
+        Function in charge of displaying all the data after the user logs in correctly.
+
+        :param incoming_data_one:
+        :param rol:
+        :param incoming_data_two:
+        :param zone_selected:
+        :param incoming_data_four:
+        :return:
+            None
+        """
+        print(f'{incoming_data_one}\n{rol}\n\n{incoming_data_two}\n\n{zone_selected}\n\n{incoming_data_four}')
 
 
 class WriteOutgoingData:
@@ -156,12 +147,18 @@ class WriteOutgoingData:
         :return:
             type: string
         """
-
-        signup_or_signing = int(input('Then enter 1- SIGN UP or 2- SIGN IN: '))
-        user_name = str(input("Enter username: "))
-        password = str(input("Enter password: "))
-        output_data = Package.register_or_login.value + split_msg + str(
-            signup_or_signing) + split_msg + user_name + split_msg + password + split_msg + zone
+        while True:
+            try:
+                signup_or_signing = int(input(Message.SELECT_LOGIN_REGISTER))
+                if signup_or_signing == 1 or signup_or_signing == 2:
+                    break
+            except:
+                pass
+        user_name = str(input(Message.ENTER_USERNAME))
+        password = str(input(Message.ENTER_PASSWORD))
+        output_data = Package.register_or_login.value + Setting.SPLIT + str(
+            signup_or_signing) + Setting.SPLIT + user_name + Setting.SPLIT + password + Setting.SPLIT + zone
+        os.system(Setting.CLEAR)
         return output_data
 
 
@@ -181,8 +178,26 @@ class Function:
         :return:
             none
         """
-        print(f'The client will close in {seconds} seconds ...')
         for i in range(seconds, 0, -1):
-            print(f'closing client in {i} seconds...')
+            print(f'{Message.CLOSING_TIMER} {i}')
             sleep(1)
         exit(0)
+
+    @staticmethod
+    def set_message(user_responding):
+        """
+        Function in charge of accepting the message that the user
+        wants to send. Then it builds the structure and returns
+        the string.
+
+        :param user_responding:
+        :return:
+            type: String
+        """
+        while True:
+            message = input(Message.MESSAGE)
+            if not str(message) == '':
+                break
+
+        final_msg = user_responding + Setting.SPLIT + str(message)
+        return final_msg
